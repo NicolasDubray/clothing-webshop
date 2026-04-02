@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="ClothingWebstore/ClothingWebstore.csproj" Id="b76f4097-ed39-4f3a-b41e-64d0d9dda1a0" />
+  <Project Path="EFCore/EFCore.csproj" Id="85dab6ed-2933-4c14-a785-79387e419930" />
+  <Project Path="Entities/Entities.csproj" Id="f25921e1-4878-4886-bb8d-fb3e7563cce5" />
+  <Project Path="Services/Services.csproj" Id="66bb777f-4896-431c-b5bf-6a7b60bc4036" />
+</Solution>
