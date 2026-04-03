@@ -17,6 +17,10 @@ namespace EFCore.Configuration
 
             builder.Property(c => c.Phone)
                 .HasMaxLength(64);
+
+            builder.HasData(
+                new Customer { Id = 1, Name = "Erik Eriksson", BirthDate = new DateTime(1998, 01, 01), Email = "erik.eriksson@gmail.se", Phone = "0705679901" }
+                );
         }
 
     }

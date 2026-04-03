@@ -16,6 +16,11 @@ namespace EFCore.Configuration
             builder.Property(s => s.Price)
                 .HasColumnType(SqlDbType.Money.ToString());
 
+            builder.HasData(
+                new Shipping { Id = 1, Name = "Postnord", Price = 4},
+                new Shipping { Id = 1, Name = "Bring", Price = 2}
+                );
+
         }
     }
 }
