@@ -13,8 +13,8 @@ namespace EFCore.Configuration
         {
             builder.HasData(
                 new Payment { Id = 1, Type = Entities.Types.PaymentType.Debit},
-                new Payment { Id = 1, Type = Entities.Types.PaymentType.Klarna},
-                new Payment { Id = 1, Type = Entities.Types.PaymentType.Swish}
+                new Payment { Id = 2, Type = Entities.Types.PaymentType.Klarna},
+                new Payment { Id = 3, Type = Entities.Types.PaymentType.Swish}
                 );
         }
     }

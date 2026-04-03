@@ -18,7 +18,7 @@ namespace EFCore.Configuration
 
             builder.HasData(
                 new Shipping { Id = 1, Name = "Postnord", Price = 4},
-                new Shipping { Id = 1, Name = "Bring", Price = 2}
+                new Shipping { Id = 2, Name = "Bring", Price = 2}
                 );
 
         }

@@ -12,7 +12,7 @@ namespace EFCore.Configuration
         public void Configure(EntityTypeBuilder<AddressCustomer> builder)
         {
             builder.HasData(
-                new AddressCustomer { AddressesId = 1, CustomersId = 1}
+                new AddressCustomer { Id = 1, AddressId = 1, CustomerId = 1}
                 );
         }
     }

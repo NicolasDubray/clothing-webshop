@@ -17,9 +17,9 @@ namespace EFCore.Configuration
             builder.HasData(
 
                 new Category { Id = 1, Name = "Pants"},
-                new Category { Id = 1, Name = "Shirt"},
-                new Category { Id = 1, Name = "Jacket"},
-                new Category { Id = 1, Name = "Shoes"}
+                new Category { Id = 2, Name = "Shirt"},
+                new Category { Id = 3, Name = "Jacket"},
+                new Category { Id = 4, Name = "Shoes"}
                 );
         }
 

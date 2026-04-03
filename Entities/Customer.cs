@@ -11,6 +11,6 @@ public class Customer
     public DateTime BirthDate { get; set; }
     public string Email { get; set; }
     public string Phone { get; set; }
-    public ICollection<Address> Addresses { get; set; } = new List<Address>();
+    public ICollection<AddressCustomer> Addresses { get; set; } = new List<AddressCustomer>();
     public ICollection<Order> Orders { get; set; } = new List<Order>();
 }
