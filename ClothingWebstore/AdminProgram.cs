@@ -1,13 +1,10 @@
 ﻿using ClothingWebstore.UIHelper;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ClothingWebstore
 {
     public class AdminProgram
     {
-        public static void RunAdmin()
+        public static async Task RunAdmin(IServiceProvider provider)
         {
             while (true)
             {
