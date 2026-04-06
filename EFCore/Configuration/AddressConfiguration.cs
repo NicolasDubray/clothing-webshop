@@ -19,6 +19,10 @@ namespace EFCore.Configuration
 
             builder.Property(a => a.Country)
                 .HasMaxLength(64);
+
+            builder.HasData(
+                new Address { Id = 1,  StreetAddress = "Uddevallagatan 1", City = "Uddevalla", Country = "Sweden"}
+                );
         }
 
     }
