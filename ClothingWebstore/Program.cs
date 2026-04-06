@@ -8,7 +8,8 @@ namespace ClothingWebstore
         {
             while (true)
             {
-                Console.WriteLine(Menu.ReturnStartMenu());
+                Console.Clear();
+                Console.WriteLine(Menu.ReturnGeneralStartMenu());
                 ConsoleKeyInfo role = Console.ReadKey(true);
 
                 switch (role.Key)
