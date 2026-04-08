@@ -17,6 +17,9 @@ namespace Services
         public Task<Customer?> GetWithOrdersAsync(int id)
             => customerRepository.GetWithOrdersAsync(id);
 
+        public Task<Customer?> GetWithAddressesAsync(int id)
+            => customerRepository.GetWithAddressesAsync(id);
+
         public void Add(Customer customer)
             => customerRepository.Add(customer);
 

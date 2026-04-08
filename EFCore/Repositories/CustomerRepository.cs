@@ -18,5 +18,13 @@ namespace EFCore.Repositories
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == id);
         }
+
+        public Task<Customer?> GetWithAddressesAsync(int id)
+        {
+            return context.Customers
+                .Include(c => c.Addresses)
+                    .ThenInclude(ac => ac.Address)
+                .FirstOrDefaultAsync(c => c.Id == id);
+        }
     }
 }

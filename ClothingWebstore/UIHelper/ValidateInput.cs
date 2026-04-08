@@ -16,6 +16,9 @@ namespace ClothingWebstore.UIHelper
             name.Length > 0 && name.Length < 64
             && name.All(c => char.IsLetter(c) || c == ' ');
 
+        internal static bool IsValidAddress(string? input) =>
+            !string.IsNullOrWhiteSpace(input) && input.Length >= 3;
+
 
         internal static bool IsValidBirthDate(string birthDate) =>
             DateTime.TryParseExact(birthDate, "yyyy-MM-dd", null, DateTimeStyles.None, out _);

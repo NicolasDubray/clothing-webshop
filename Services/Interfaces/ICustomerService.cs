@@ -10,6 +10,7 @@ namespace Services.Interfaces
         Task<List<Customer>> GetAllAsync();
         Task<Customer?> GetByIdAsync(int id);
         Task<Customer?> GetWithOrdersAsync(int id);
+        public Task<Customer?> GetWithAddressesAsync(int id);
         void Add(Customer customer);
         void Update(Customer customer);
         void Delete(Customer customer);

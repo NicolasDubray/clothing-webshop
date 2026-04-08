@@ -81,7 +81,12 @@ namespace ClothingWebstore
                         break;
 
                     case "3":
+                        await DeleteCustomer();
+                        break;
+
+                    case "4":
                         await ListAllCustomers();
+                        Message.PressAnyKeyToContinue();
                         break;
 
                     case "B":
@@ -100,7 +105,7 @@ namespace ClothingWebstore
             while (true)
             {
                 Console.Clear();
-                new Window("Choice", 0, 0, Menu.ReturnManageQuestionList()).Draw();
+                new Window("Choice", 0, 0, Menu.ReturnManageQuestionList("manage")).Draw();
                 new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
 
                 var customers = await ListAllCustomers();
@@ -129,10 +134,13 @@ namespace ClothingWebstore
 
         private static async Task ManageCustomer(Customer customer)
         {
+            using var scope = _provider.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+            var customerWithAddresses = await service.GetWithAddressesAsync(customer.Id);
             while (true)
             {
                 Console.Clear();
-                Console.WriteLine(Menu.ReturnCustomerDetailsMenu(customer));
+                Console.WriteLine(Menu.ReturnCustomerDetailsMenu(customerWithAddresses!));
                 string? input = Console.ReadLine();
 
                 if (input is null)
@@ -152,27 +160,53 @@ namespace ClothingWebstore
                             ValidateInput.IsValidName,
                             (c, value) => c.Name = value);
                         break;
+
                     case "2":
                         await UpdateCustomerProperty(customer,
                             "birth date (yyyy-MM-dd)",
                             ValidateInput.IsValidBirthDate,
                             (c, value) => c.BirthDate = DateTime.Parse(value));
                         break;
+
                     case "3":
                         await UpdateCustomerProperty(customer,
                             "email",
                             ValidateInput.IsValidEmail,
                             (c, value) => c.Email = value);
                         break;
+
                     case "4":
                         await UpdateCustomerProperty(customer,
                             "phone",
                             ValidateInput.IsValidPhone,
                             (c, value) => c.Phone = value);
                         break;
+
                     case "5":
+                        await UpdateCustomerProperty(customer,
+                            "street",
+                            ValidateInput.IsValidAddress,
+                            (c, value) => c.Addresses.FirstOrDefault()!.Address.StreetAddress = value);
+                        break;
+
+                    case "6":
+                        await UpdateCustomerProperty(customer,
+                            "city",
+                            ValidateInput.IsValidName,
+                            (c, value) => c.Addresses.FirstOrDefault()!.Address.City = value);
+                        break;
+
+                    case "7":
+                        await UpdateCustomerProperty(customer,
+                            "country",
+                            ValidateInput.IsValidName,
+                            (c, value) => c.Addresses.FirstOrDefault()!.Address.Country = value);
+                        break;
+
+                    case "8":
                         await ListOrderHistory(customer);
                         break;
+
                     default:
                         Message.InvalidInput();
                         break;
@@ -252,6 +286,9 @@ namespace ClothingWebstore
             string birthDate = GetInputForNewCustomer("Birth date (yyyy-MM-dd)", ValidateInput.IsValidBirthDate);
             string email = GetInputForNewCustomer("Email", ValidateInput.IsValidEmail);
             string phone = GetInputForNewCustomer("Phone", ValidateInput.IsValidPhone);
+            string street = GetInputForNewCustomer("Street", ValidateInput.IsValidAddress);
+            string city = GetInputForNewCustomer("City", ValidateInput.IsValidName);
+            string country = GetInputForNewCustomer("Country", ValidateInput.IsValidName);
 
             using var scope = _provider.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
@@ -261,7 +298,19 @@ namespace ClothingWebstore
                 Name = name,
                 BirthDate = DateTime.Parse(birthDate),
                 Email = email,
-                Phone = phone
+                Phone = phone,
+                Addresses = new List<AddressCustomer>
+                {
+                    new AddressCustomer
+                    {
+                        Address = new Address
+                        {
+                            StreetAddress = street,
+                            City = city,
+                            Country = country
+                        }
+                    }
+                }
             });
             await context.SaveChangesAsync();
         }
@@ -277,6 +326,47 @@ namespace ClothingWebstore
                 if (validate(input!))
                     return input!;
 
+                Message.InvalidInput();
+            }
+        }
+
+        private static async Task DeleteCustomer()
+        {
+            while (true)
+            {
+                Console.Clear();
+                new Window("Choice", 0, 0, Menu.ReturnManageQuestionList("delete")).Draw();
+                new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
+                var customers = await ListAllCustomers();
+
+                string? input = Console.ReadLine();
+
+                if (input.Equals("B", StringComparison.OrdinalIgnoreCase))
+                    return;
+
+                int id = int.Parse(input);
+
+                var customer = customers.FirstOrDefault(c => c.Id == id);
+
+                if(ValidateInput.IsValidId(input, customers) && customer != null)
+                {
+                    Console.WriteLine($"Are you sure you want to delete: {customer.Name}?");
+                    Console.WriteLine("Press Y/y + enter");
+                    string? sure = Console.ReadLine();
+                    if(sure?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        using var scope = _provider.CreateScope();
+                        var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+                        var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
+                        service.Delete(customer);
+                        await context.SaveChangesAsync();
+                        return;
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
                 Message.InvalidInput();
             }
         }
