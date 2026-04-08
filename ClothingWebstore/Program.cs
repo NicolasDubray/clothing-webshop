@@ -1,10 +1,9 @@
-﻿using ClothingWebstore.UIHelper;
+﻿using Microsoft.Extensions.DependencyInjection;
+
+using ClothingWebstore.UIHelper;
 
 using EFCore;
 using EFCore.Repositories;
-
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 using Services;
 using Services.Interfaces;
@@ -30,6 +29,18 @@ namespace ClothingWebstore
 
             services.AddScoped<ICustomerRepository, CustomerRepository>();
             services.AddScoped<ICustomerService, CustomerService>();
+
+            services.AddScoped<IOrderRepository, OrderRepository>();
+            services.AddScoped<IOrderService, OrderService>();
+
+            services.AddScoped<IOrderProductRepository, OrderProductRepository>();
+            services.AddScoped<IOrderProductService, OrderProductService>();
+
+            services.AddScoped<IPaymentRepository, PaymentRepository>();
+            services.AddScoped<IPaymentService, PaymentService>();
+
+            services.AddScoped<IShippingRepository, ShippingRepository>();
+            services.AddScoped<IShippingService, ShippingService>();
 
             var provider = services.BuildServiceProvider();
 
