@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ClothingWebstore.UIHelper
+﻿namespace ClothingWebstore.UIHelper
 {
     internal class Menu
     {
@@ -29,6 +25,19 @@ namespace ClothingWebstore.UIHelper
                 [B] Back
 
                 """;
+        }
+
+        public static string ReturnCustomerMenu()
+        {
+            return """
+               
+                [1] Go to Products
+                [2] View Cart
+
+                [B] Go Back
+                """;
+
+
         }
     }
 }
