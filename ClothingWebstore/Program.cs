@@ -1,11 +1,40 @@
 ﻿using ClothingWebstore.UIHelper;
 
+using EFCore;
+using EFCore.Repositories;
+
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+using Services;
+using Services.Interfaces;
+
 namespace ClothingWebstore
 {
     internal class Program
     {
         static async Task Main(string[] args)
         {
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(AppContext.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: false)
+                .Build();
+
+            var services = new ServiceCollection();
+
+            services.AddDbContext<WebshopDbContext>();
+
+            services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<IProductService, ProductService>();
+
+            services.AddScoped<IBrandRepository, BrandRepository>();
+            services.AddScoped<IBrandService, BrandService>();
+
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<ICategoryService, CategoryService>();
+
+            var provider = services.BuildServiceProvider();
+
             while (true)
             {
                 Console.Clear();
@@ -16,11 +45,11 @@ namespace ClothingWebstore
                 {
                     case ConsoleKey.Enter:
                     case ConsoleKey.C:
-                        CustomerProgram.RunCustomer();
+                        await CustomerProgram.RunCustomer(provider);
                         break;
 
                     case ConsoleKey.A:
-                        AdminProgram.RunAdmin();
+                        await AdminProgram.RunAdmin(provider);
                         break;
 
                     case ConsoleKey.Q:
@@ -32,7 +61,6 @@ namespace ClothingWebstore
                         break;
                 }
             }
-
         }
     }
 }

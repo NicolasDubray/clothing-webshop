@@ -1,10 +1,18 @@
-﻿using ClothingWebstore.UIHelper;
+using Microsoft.Extensions.DependencyInjection;
+
+using ClothingWebstore.UIHelper;
+
+﻿using EFCore;
+
+using Entities;
+
+using Services.Interfaces;
 
 namespace ClothingWebstore
 {
     public class CustomerProgram
     {
-        public static void RunCustomer()
+        public static async Task RunCustomer(IServiceProvider provider)
         {
             while (true)
             {
@@ -14,7 +22,6 @@ namespace ClothingWebstore
 
                 switch (choice)
                 {
-
                     case "1":
                         GoToProductPage();
                         break;
@@ -31,7 +38,6 @@ namespace ClothingWebstore
                         Thread.Sleep(1000);
                         Console.ReadKey();
                         break;
-
                 }
             }
         }
@@ -49,21 +55,6 @@ namespace ClothingWebstore
         private static void GoBack()
         {
 
-
-
         }
-
-
     }
 }
-
-
-
-
-
-
-
-
-
-
-

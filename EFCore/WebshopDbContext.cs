@@ -4,7 +4,8 @@ using Microsoft.Extensions.Configuration;
 
 namespace EFCore
 {
-    public class WebshopDbContext : DbContext
+    public class WebshopDbContext(DbContextOptions<WebshopDbContext> options)
+        : DbContext(options)
     {
         public DbSet<Address> Addresses { get; set; }
         public DbSet<AddressCustomer> AddressCustomers { get; set; }

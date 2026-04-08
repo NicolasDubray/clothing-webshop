@@ -10,7 +10,7 @@ namespace ClothingWebstore
 {
     public class AdminProgram
     {
-        public static async Task RunAdmin()
+        public static async Task RunAdmin(IServiceProvider provider)
         {
             while (true)
             {
