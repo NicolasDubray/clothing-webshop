@@ -14,7 +14,7 @@ namespace ClothingWebstore.UIHelper
 
         internal static void PressAnyKeyToContinue()
         {
-            Console.WriteLine("Press any key to continue.");
+            Console.WriteLine($"{Environment.NewLine}Press any key to continue.{Environment.NewLine}");
             Console.ReadKey(true);
         }
     }

@@ -19,7 +19,8 @@ namespace ClothingWebstore
             while (true)
             {
                 Console.Clear();
-                Console.WriteLine(Menu.ReturnAdminStartMenu());
+                new Window("Choice", 0, 0, Menu.ReturnAdminStartList()).Draw();
+                new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
                 string? choice = Console.ReadLine();
 
                 switch (choice)
@@ -85,6 +86,7 @@ namespace ClothingWebstore
                         break;
 
                     case "4":
+                        Console.Clear();
                         await ListAllCustomers();
                         Message.PressAnyKeyToContinue();
                         break;
@@ -105,7 +107,7 @@ namespace ClothingWebstore
             while (true)
             {
                 Console.Clear();
-                new Window("Choice", 0, 0, Menu.ReturnManageQuestionList("manage")).Draw();
+                new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("Who would you like to manage?")).Draw();
                 new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
 
                 var customers = await ListAllCustomers();
@@ -140,7 +142,10 @@ namespace ClothingWebstore
             while (true)
             {
                 Console.Clear();
+                new Window("Manage customer", 0, 0, Menu.ReturnSimpleTextList("What would you like to change")).Draw();
+                new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
                 Console.WriteLine(Menu.ReturnCustomerDetailsMenu(customerWithAddresses!));
+
                 string? input = Console.ReadLine();
 
                 if (input is null)
@@ -256,7 +261,8 @@ namespace ClothingWebstore
             var customerWithOrders = await service.GetWithOrdersAsync(customer.Id);
 
             Console.Clear();
-            Console.WriteLine($"[B] Back {Environment.NewLine}");
+            new Window("Order", 0, 0, Menu.ReturnSimpleTextList("Total order history")).Draw();
+            new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
 
             if (customerWithOrders?.Orders.Count != 0)
             {
@@ -274,7 +280,6 @@ namespace ClothingWebstore
             else
             {
                 Console.WriteLine("No orders found.");
-                Message.PressAnyKeyToContinue();
             }
             if (Console.ReadLine()!.Equals("B", StringComparison.OrdinalIgnoreCase))
                 return;
@@ -335,7 +340,7 @@ namespace ClothingWebstore
             while (true)
             {
                 Console.Clear();
-                new Window("Choice", 0, 0, Menu.ReturnManageQuestionList("delete")).Draw();
+                new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("Who would you like to delete?")).Draw();
                 new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
                 var customers = await ListAllCustomers();
 
