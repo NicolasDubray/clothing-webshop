@@ -33,6 +33,9 @@ namespace ClothingWebstore
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<ICategoryService, CategoryService>();
 
+            services.AddScoped<ICustomerRepository, CustomerRepository>();
+            services.AddScoped<ICustomerService, CustomerService>();
+
             var provider = services.BuildServiceProvider();
 
             while (true)

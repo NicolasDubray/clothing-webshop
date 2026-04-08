@@ -5,13 +5,17 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Services.Interfaces;
 
 namespace ClothingWebstore
 {
     public class AdminProgram
     {
+        private static IServiceProvider _provider;
         public static async Task RunAdmin(IServiceProvider provider)
         {
+            _provider = provider;
             while (true)
             {
                 Console.Clear();
@@ -76,6 +80,10 @@ namespace ClothingWebstore
                         await AddNewCustomer();
                         break;
 
+                    case "3":
+                        await ListAllCustomers();
+                        break;
+
                     case "B":
                     case "b":
                         return;
@@ -89,18 +97,13 @@ namespace ClothingWebstore
 
         private static async Task ManageCustomers()
         {
-            using var context = new WebshopDbContext();
-            var customers = await context.Customers
-                .OrderBy(c => c.Id)
-                .ToListAsync();
-
             while (true)
             {
                 Console.Clear();
                 new Window("Choice", 0, 0, Menu.ReturnManageQuestionList()).Draw();
                 new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
 
-                ListAllCustomers(customers);
+                var customers = await ListAllCustomers();
 
                 string? choice = Console.ReadLine();
                 if (choice is null)
@@ -187,34 +190,36 @@ namespace ClothingWebstore
 
                 if (validate(input!))
                 {
-                    using var context = new WebshopDbContext();
-                    context.Customers.Update(customer);
+                    using var scope = _provider.CreateScope();
+                    var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+                    var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
                     update(customer, input!);
+                    service.Update(customer);
                     await context.SaveChangesAsync();
                     return;
                 }
-
                 Message.InvalidInput();
             }
         }
 
-        private static void ListAllCustomers(List<Customer> customers)
+        private static async Task<List<Customer>> ListAllCustomers()
         {
+            using var scope = _provider.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+            var customers = await service.GetAllAsync();
+
             foreach (var c in customers)
             {
                 Console.WriteLine($"[{c.Id}] {c.Name}");
             }
+            return customers;
         }
 
         private static async Task ListOrderHistory(Customer customer)
         {
-            using var context = new WebshopDbContext();
-            var customerWithOrders = await context.Customers
-                .Include(c => c.Orders)
-                    .ThenInclude(o => o.OrderProducts)
-                        .ThenInclude(op => op.Product)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(c => c.Id == customer.Id);
+            using var scope = _provider.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+            var customerWithOrders = await service.GetWithOrdersAsync(customer.Id);
 
             Console.Clear();
             Console.WriteLine($"[B] Back {Environment.NewLine}");
@@ -248,8 +253,10 @@ namespace ClothingWebstore
             string email = GetInputForNewCustomer("Email", ValidateInput.IsValidEmail);
             string phone = GetInputForNewCustomer("Phone", ValidateInput.IsValidPhone);
 
-            using var context = new WebshopDbContext();
-            context.Customers.Add(new Customer
+            using var scope = _provider.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+            var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
+            service.Add(new Customer
             {
                 Name = name,
                 BirthDate = DateTime.Parse(birthDate),
