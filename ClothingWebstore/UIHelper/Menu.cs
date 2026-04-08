@@ -32,6 +32,19 @@ namespace ClothingWebstore.UIHelper
                 """;
         }
 
+        public static string ReturnCustomerMenu()
+        {
+            return """
+               
+                [1] Go to Products
+                [2] View Cart
+
+                [B] Go Back
+                """;
+
+
+        }
+
         internal static List<string> ReturnInstructionList()
         {
             return ["Press digit + enter", "[B] Back"];
