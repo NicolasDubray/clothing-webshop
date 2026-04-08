@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Entities;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -29,6 +30,39 @@ namespace ClothingWebstore.UIHelper
                 [B] Back
 
                 """;
+        }
+
+        internal static List<string> ReturnInstructionList()
+        {
+            return ["Press digit + enter", "[B] Back"];
+        }
+
+        internal static List<string> ReturnManageCustomerList()
+        {
+            return ["What would you like to do?", "[1] Manage an existing customer", "[2] Add new customer"];
+        }
+
+        internal static List<string> ReturnManageQuestionList()
+        {
+            return ["Who would you like to manage?"];
+        }
+
+        internal static string ReturnCustomerDetailsMenu(Customer customer)
+        {
+            return ($"""
+                    What would you like to change?
+                    Press key + enter and write in new value.
+
+                    [1] Name : {customer.Name}
+                    [2] Birth date: {customer.BirthDate:yyyy-MM-dd}
+                    [3] Email: {customer.Email}
+                    [4] Phone: {customer.Phone}
+
+                    [5] See order history
+
+                    [B] Back
+
+                    """);
         }
     }
 }
