@@ -155,56 +155,56 @@ namespace ClothingWebstore
                 switch (input)
                 {
                     case "1":
-                        await UpdateCustomerProperty(customer,
+                        await UpdateCustomerProperty(customerWithAddresses!,
                             "name",
                             ValidateInput.IsValidName,
                             (c, value) => c.Name = value);
                         break;
 
                     case "2":
-                        await UpdateCustomerProperty(customer,
+                        await UpdateCustomerProperty(customerWithAddresses!,
                             "birth date (yyyy-MM-dd)",
                             ValidateInput.IsValidBirthDate,
                             (c, value) => c.BirthDate = DateTime.Parse(value));
                         break;
 
                     case "3":
-                        await UpdateCustomerProperty(customer,
+                        await UpdateCustomerProperty(customerWithAddresses!,
                             "email",
                             ValidateInput.IsValidEmail,
                             (c, value) => c.Email = value);
                         break;
 
                     case "4":
-                        await UpdateCustomerProperty(customer,
+                        await UpdateCustomerProperty(customerWithAddresses!,
                             "phone",
                             ValidateInput.IsValidPhone,
                             (c, value) => c.Phone = value);
                         break;
 
                     case "5":
-                        await UpdateCustomerProperty(customer,
+                        await UpdateCustomerProperty(customerWithAddresses!,
                             "street",
                             ValidateInput.IsValidAddress,
                             (c, value) => c.Addresses.FirstOrDefault()!.Address.StreetAddress = value);
                         break;
 
                     case "6":
-                        await UpdateCustomerProperty(customer,
+                        await UpdateCustomerProperty(customerWithAddresses!,
                             "city",
                             ValidateInput.IsValidName,
                             (c, value) => c.Addresses.FirstOrDefault()!.Address.City = value);
                         break;
 
                     case "7":
-                        await UpdateCustomerProperty(customer,
+                        await UpdateCustomerProperty(customerWithAddresses!,
                             "country",
                             ValidateInput.IsValidName,
                             (c, value) => c.Addresses.FirstOrDefault()!.Address.Country = value);
                         break;
 
                     case "8":
-                        await ListOrderHistory(customer);
+                        await ListOrderHistory(customerWithAddresses!);
                         break;
 
                     default:
