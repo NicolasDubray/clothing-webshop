@@ -8,7 +8,7 @@ public interface IProductService
     Task<Product?> GetByIdAsync(int id);
     Task<List<Product>> SearchAsync(string query);
 
-    void Add(Product product);
-    void Update(Product product);
-    void Delete(Product product);
+    Task AddAsync(Product product);
+    Task UpdateAsync(Product product);
+    Task DeleteAsync(Product product);
 }
