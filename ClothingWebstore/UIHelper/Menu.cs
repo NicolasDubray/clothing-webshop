@@ -71,6 +71,11 @@ namespace ClothingWebstore.UIHelper
             return ["What would you like to do?", "[1] Manage an existing customer", "[2] Add new customer", "[3] Remove a customer", "[4] List all existing customers"];
         }
 
+        internal static List<string> ReturnInstructionStatisticsList()
+        {
+            return ["Press key", "[1] Best selling products", "[2] Total revenue", "[3] Top buying customers", "[B] Back"];
+        }
+
         internal static List<string> ReturnSimpleTextList(string text)
         {
             return [$"{text}"];

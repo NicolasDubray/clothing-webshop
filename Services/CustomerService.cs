@@ -20,6 +20,9 @@ namespace Services
         public Task<Customer?> GetWithAddressesAsync(int id)
             => customerRepository.GetWithAddressesAsync(id);
 
+        public Task<List<Customer>> GetTopBuyingCustomersAsync(int count)
+            => customerRepository.GetTopBuyingCustomersAsync(count);
+
         public void Add(Customer customer)
             => customerRepository.Add(customer);
 

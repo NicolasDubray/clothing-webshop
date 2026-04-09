@@ -14,6 +14,10 @@ public class ProductService(IProductRepository productRepository) : IProductServ
 
     public Task<List<Product>> SearchAsync(string query)
         => productRepository.SearchAsync(query);
+    public Task<List<Product>> GetBestSellingProductsAsync(int count)
+        => productRepository.GetBestSellingProductsAsync(count);
+    public Task<double> GetTotalRevenueAsync()
+        => productRepository.GetTotalRevenueAsync();
 
     public void Add(Product product)
         => productRepository.Add(product);

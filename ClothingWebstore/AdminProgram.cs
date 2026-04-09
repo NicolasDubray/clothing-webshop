@@ -378,7 +378,80 @@ namespace ClothingWebstore
 
         private static async Task SeeStatistics()
         {
+            while (true)
+            {
+                Console.Clear();
+                new Window("Statistics", 0, 0, Menu.ReturnSimpleTextList("All statistics for shop")).Draw();
+                new Window("Navigation", 40, 0, Menu.ReturnInstructionStatisticsList()).Draw();
 
+                ConsoleKeyInfo key = Console.ReadKey(true);
+
+                switch (key.Key)
+                {
+                    case ConsoleKey.B:
+                        return;
+                    case ConsoleKey.D1:
+                        await PrintBestSellingProducts();
+                        break;
+                    case ConsoleKey.D2:
+                        await PrintTotalRevenue();
+                        break;
+                    case ConsoleKey.D3:
+                        await PrintTopBuyingCustomers();
+                        break;
+                    default:
+                        Message.InvalidInput();
+                        break;
+                }
+            }
+        }
+
+        private static async Task PrintBestSellingProducts()
+        {
+            int amount = 3;
+            using var scope = _provider.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<IProductService>();
+            var topProducts = await service.GetBestSellingProductsAsync(amount);
+
+            Console.WriteLine("Best selling products");
+            foreach (var product in topProducts)
+            {
+                Console.WriteLine($"""
+                                    {product.Name}
+                                        {product.Price}
+                                        {product.ShortDescription}
+                                        {product.Brand.Name}
+
+                                    """);
+            }
+            Message.PressAnyKeyToContinue();
+        }
+
+        private static async Task PrintTotalRevenue()
+        {
+            using var scope = _provider.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<IProductService>();
+            var total = await service.GetTotalRevenueAsync();
+
+            Console.WriteLine($"""
+                Total revenue: 
+                {total:C}
+                """);
+            Message.PressAnyKeyToContinue();
+        }
+
+        private static async Task PrintTopBuyingCustomers()
+        {
+            using var scope = _provider.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+            var topBuyingCustomers = await service.GetTopBuyingCustomersAsync(1);
+
+            Console.WriteLine("Top buying customers");
+            foreach(var customer in topBuyingCustomers)
+            {
+                Console.WriteLine($"{Environment.NewLine} -{customer.Name}");
+            }
+            Message.PressAnyKeyToContinue();
         }
     }
 }
