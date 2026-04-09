@@ -87,7 +87,7 @@ namespace ClothingWebstore
 
                     case "4":
                         Console.Clear();
-                        await ListAllCustomers();
+                        await ListAllCustomersNames();
                         Message.PressAnyKeyToContinue();
                         break;
 
@@ -110,7 +110,7 @@ namespace ClothingWebstore
                 new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("Who would you like to manage?")).Draw();
                 new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
 
-                var customers = await ListAllCustomers();
+                var customers = await ListAllCustomersWithId();
 
                 string? choice = Console.ReadLine();
                 if (choice is null)
@@ -231,7 +231,6 @@ namespace ClothingWebstore
                 {
                     using var scope = _provider.CreateScope();
                     var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
-                    var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
                     update(customer, input!);
                     await service.UpdateAsync(customer);
                     return;
@@ -240,16 +239,25 @@ namespace ClothingWebstore
             }
         }
 
-        private static async Task<List<Customer>> ListAllCustomers()
+        private static async Task<List<Customer>> ListAllCustomersWithId()
         {
             using var scope = _provider.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
             var customers = await service.GetAllAsync();
 
-            foreach (var c in customers)
-            {
-                Console.WriteLine($"[{c.Id}] {c.Name}");
-            }
+            var rows = customers.Select(p => $"[{p.Id}] {p.Name}").ToList();
+            new Window("Customers", 0, 5, rows).Draw();
+            return customers;
+        }
+
+        private static async Task<List<Customer>> ListAllCustomersNames()
+        {
+            using var scope = _provider.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+            var customers = await service.GetAllAsync();
+
+            var rows = customers.Select(p => $"{p.Name}").ToList();
+            new Window("All customers", 0, 0, rows).Draw();
             return customers;
         }
 
@@ -288,15 +296,14 @@ namespace ClothingWebstore
         {
             string name = GetInputForNewCustomer("Name", ValidateInput.IsValidName);
             string birthDate = GetInputForNewCustomer("Birth date (yyyy-MM-dd)", ValidateInput.IsValidBirthDate);
-            string email = GetInputForNewCustomer("Email", ValidateInput.IsValidEmail);
-            string phone = GetInputForNewCustomer("Phone", ValidateInput.IsValidPhone);
+            string email = GetInputForNewCustomer("Email (xxx@xxx.xx)", ValidateInput.IsValidEmail);
+            string phone = GetInputForNewCustomer("Phone (10 digits)", ValidateInput.IsValidPhone);
             string street = GetInputForNewCustomer("Street", ValidateInput.IsValidAddress);
             string city = GetInputForNewCustomer("City", ValidateInput.IsValidName);
             string country = GetInputForNewCustomer("Country", ValidateInput.IsValidName);
 
             using var scope = _provider.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
-            var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
             await service.AddAsync(new Customer
             {
                 Name = name,
@@ -340,7 +347,7 @@ namespace ClothingWebstore
                 Console.Clear();
                 new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("Who would you like to delete?")).Draw();
                 new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
-                var customers = await ListAllCustomers();
+                var customers = await ListAllCustomersWithId();
 
                 string? input = Console.ReadLine();
 
@@ -360,7 +367,6 @@ namespace ClothingWebstore
                     {
                         using var scope = _provider.CreateScope();
                         var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
-                        var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
                         await service.DeleteAsync(customer);
                         return;
                     }

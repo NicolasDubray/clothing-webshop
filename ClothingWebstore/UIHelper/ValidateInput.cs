@@ -21,7 +21,9 @@ namespace ClothingWebstore.UIHelper
 
 
         internal static bool IsValidBirthDate(string birthDate) =>
-            DateTime.TryParseExact(birthDate, "yyyy-MM-dd", null, DateTimeStyles.None, out _);
+            DateTime.TryParseExact(birthDate, "yyyy-MM-dd", null, DateTimeStyles.None, out DateTime date)
+            && date <= DateTime.Today
+            && date >= DateTime.Today.AddYears(-130);
 
 
         internal static bool IsValidEmail(string email) =>
