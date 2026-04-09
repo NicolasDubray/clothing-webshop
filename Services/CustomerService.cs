@@ -20,13 +20,13 @@ namespace Services
         public Task<Customer?> GetWithAddressesAsync(int id)
             => customerRepository.GetWithAddressesAsync(id);
 
-        public void Add(Customer customer)
-            => customerRepository.Add(customer);
+        public Task AddAsync(Customer customer)
+            => customerRepository.AddAsync(customer);
 
-        public void Update(Customer customer)
-            => customerRepository.Update(customer);
+        public Task UpdateAsync(Customer customer)
+            => customerRepository.UpdateAsync(customer);
 
-        public void Delete(Customer customer)
-            => customerRepository.Delete(customer);
+        public Task DeleteAsync(Customer customer)
+            => customerRepository.DeleteAsync(customer);
     }
 }

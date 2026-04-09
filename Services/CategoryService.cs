@@ -15,12 +15,12 @@ public class CategoryService(ICategoryRepository categoryRepository) : ICategory
     public Task<List<Category>> SearchByNameAsync(string nameQuery)
         => categoryRepository.SearchByNameAsync(nameQuery);
 
-    public void Add(Category category)
-        => categoryRepository.Add(category);
+    public Task AddAsync(Category category)
+        => categoryRepository.AddAsync(category);
 
-    public void Update(Category category)
-        => categoryRepository.Update(category);
+    public Task UpdateAsync(Category category)
+        => categoryRepository.UpdateAsync(category);
 
-    public void Delete(Category category)
-        => categoryRepository.Delete(category);
+    public Task DeleteAsync(Category category)
+        => categoryRepository.DeleteAsync(category);
 }

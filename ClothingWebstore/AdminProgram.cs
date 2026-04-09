@@ -233,8 +233,7 @@ namespace ClothingWebstore
                     var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
                     var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
                     update(customer, input!);
-                    service.Update(customer);
-                    await context.SaveChangesAsync();
+                    await service.UpdateAsync(customer);
                     return;
                 }
                 Message.InvalidInput();
@@ -298,7 +297,7 @@ namespace ClothingWebstore
             using var scope = _provider.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
             var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
-            service.Add(new Customer
+            await service.AddAsync(new Customer
             {
                 Name = name,
                 BirthDate = DateTime.Parse(birthDate),
@@ -317,7 +316,6 @@ namespace ClothingWebstore
                     }
                 }
             });
-            await context.SaveChangesAsync();
         }
 
         private static string GetInputForNewCustomer(string property, Func<string, bool> validate)
@@ -363,8 +361,7 @@ namespace ClothingWebstore
                         using var scope = _provider.CreateScope();
                         var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
                         var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
-                        service.Delete(customer);
-                        await context.SaveChangesAsync();
+                        await service.DeleteAsync(customer);
                         return;
                     }
                     else

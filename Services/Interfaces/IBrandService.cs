@@ -8,7 +8,7 @@ public interface IBrandService
     Task<Brand?> GetByIdAsync(int id);
     Task<List<Brand>> SearchByNameAsync(string nameQuery);
 
-    void Add(Brand brand);
-    void Update(Brand brand);
-    void Delete(Brand brand);
+    Task AddAsync(Brand brand);
+    Task UpdateAsync(Brand brand);
+    Task DeleteAsync(Brand brand);
 }
