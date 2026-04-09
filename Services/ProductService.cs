@@ -19,12 +19,12 @@ public class ProductService(IProductRepository productRepository) : IProductServ
     public Task<double> GetTotalRevenueAsync()
         => productRepository.GetTotalRevenueAsync();
 
-    public void Add(Product product)
-        => productRepository.Add(product);
+    public Task AddAsync(Product product)
+        => productRepository.AddAsync(product);
 
-    public void Update(Product product)
-        => productRepository.Update(product);
+    public Task UpdateAsync(Product product)
+        => productRepository.UpdateAsync(product);
 
-    public void Delete(Product product)
-        => productRepository.Delete(product);
+    public Task DeleteAsync(Product product)
+        => productRepository.DeleteAsync(product);
 }

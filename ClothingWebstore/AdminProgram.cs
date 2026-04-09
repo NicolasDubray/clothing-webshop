@@ -160,56 +160,56 @@ namespace ClothingWebstore
                 switch (input)
                 {
                     case "1":
-                        await UpdateCustomerProperty(customer,
+                        await UpdateCustomerProperty(customerWithAddresses!,
                             "name",
                             ValidateInput.IsValidName,
                             (c, value) => c.Name = value);
                         break;
 
                     case "2":
-                        await UpdateCustomerProperty(customer,
+                        await UpdateCustomerProperty(customerWithAddresses!,
                             "birth date (yyyy-MM-dd)",
                             ValidateInput.IsValidBirthDate,
                             (c, value) => c.BirthDate = DateTime.Parse(value));
                         break;
 
                     case "3":
-                        await UpdateCustomerProperty(customer,
+                        await UpdateCustomerProperty(customerWithAddresses!,
                             "email",
                             ValidateInput.IsValidEmail,
                             (c, value) => c.Email = value);
                         break;
 
                     case "4":
-                        await UpdateCustomerProperty(customer,
+                        await UpdateCustomerProperty(customerWithAddresses!,
                             "phone",
                             ValidateInput.IsValidPhone,
                             (c, value) => c.Phone = value);
                         break;
 
                     case "5":
-                        await UpdateCustomerProperty(customer,
+                        await UpdateCustomerProperty(customerWithAddresses!,
                             "street",
                             ValidateInput.IsValidAddress,
                             (c, value) => c.Addresses.FirstOrDefault()!.Address.StreetAddress = value);
                         break;
 
                     case "6":
-                        await UpdateCustomerProperty(customer,
+                        await UpdateCustomerProperty(customerWithAddresses!,
                             "city",
                             ValidateInput.IsValidName,
                             (c, value) => c.Addresses.FirstOrDefault()!.Address.City = value);
                         break;
 
                     case "7":
-                        await UpdateCustomerProperty(customer,
+                        await UpdateCustomerProperty(customerWithAddresses!,
                             "country",
                             ValidateInput.IsValidName,
                             (c, value) => c.Addresses.FirstOrDefault()!.Address.Country = value);
                         break;
 
                     case "8":
-                        await ListOrderHistory(customer);
+                        await ListOrderHistory(customerWithAddresses!);
                         break;
 
                     default:
@@ -233,8 +233,7 @@ namespace ClothingWebstore
                     var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
                     var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
                     update(customer, input!);
-                    service.Update(customer);
-                    await context.SaveChangesAsync();
+                    await service.UpdateAsync(customer);
                     return;
                 }
                 Message.InvalidInput();
@@ -298,7 +297,7 @@ namespace ClothingWebstore
             using var scope = _provider.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
             var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
-            service.Add(new Customer
+            await service.AddAsync(new Customer
             {
                 Name = name,
                 BirthDate = DateTime.Parse(birthDate),
@@ -317,7 +316,6 @@ namespace ClothingWebstore
                     }
                 }
             });
-            await context.SaveChangesAsync();
         }
 
         private static string GetInputForNewCustomer(string property, Func<string, bool> validate)
@@ -363,8 +361,7 @@ namespace ClothingWebstore
                         using var scope = _provider.CreateScope();
                         var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
                         var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
-                        service.Delete(customer);
-                        await context.SaveChangesAsync();
+                        await service.DeleteAsync(customer);
                         return;
                     }
                     else

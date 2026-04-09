@@ -9,7 +9,7 @@ public interface IProductService
     Task<List<Product>> SearchAsync(string query);
     Task<List<Product>> GetBestSellingProductsAsync(int count);
     Task<double> GetTotalRevenueAsync();
-    void Add(Product product);
-    void Update(Product product);
-    void Delete(Product product);
+    Task AddAsync(Product product);
+    Task UpdateAsync(Product product);
+    Task DeleteAsync(Product product);
 }

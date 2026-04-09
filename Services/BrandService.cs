@@ -15,12 +15,12 @@ public class BrandService(IBrandRepository brandRepository) : IBrandService
     public Task<List<Brand>> SearchByNameAsync(string nameQuery)
         => brandRepository.SearchByNameAsync(nameQuery);
 
-    public void Add(Brand brand)
-        => brandRepository.Add(brand);
+    public Task AddAsync(Brand brand)
+        => brandRepository.AddAsync(brand);
 
-    public void Update(Brand brand)
-        => brandRepository.Update(brand);
+    public Task UpdateAsync(Brand brand)
+        => brandRepository.UpdateAsync(brand);
 
-    public void Delete(Brand brand)
-        => brandRepository.Delete(brand);
+    public Task DeleteAsync(Brand brand)
+        => brandRepository.DeleteAsync(brand);
 }

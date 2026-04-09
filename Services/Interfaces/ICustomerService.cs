@@ -12,8 +12,8 @@ namespace Services.Interfaces
         Task<Customer?> GetWithOrdersAsync(int id);
         public Task<Customer?> GetWithAddressesAsync(int id);
         Task<List<Customer>> GetTopBuyingCustomersAsync(int count);
-        void Add(Customer customer);
-        void Update(Customer customer);
-        void Delete(Customer customer);
+        Task AddAsync(Customer customer);
+        Task UpdateAsync(Customer customer);
+        Task DeleteAsync(Customer customer);
     }
 }

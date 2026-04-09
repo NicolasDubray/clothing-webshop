@@ -14,12 +14,22 @@ public class Repository<T>(WebshopDbContext context) : IRepository<T> where T : 
     public Task<T?> GetByIdAsync(int id)
         => dbSet.FindAsync(id).AsTask();
 
-    public void Add(T entity)
-        => dbSet.Add(entity);
+    public async Task AddAsync(T entity)
+    {
+        dbSet.Add(entity);
+        await context.SaveChangesAsync();
+    }
 
-    public void Update(T entity)
-        => dbSet.Update(entity);
+    public async Task UpdateAsync(T entity)
+    {
+        dbSet.Update(entity);
+        await context.SaveChangesAsync();
+    }
 
-    public void Delete(T entity)
-        => dbSet.Remove(entity);
+    public async Task DeleteAsync(T entity)
+    {
+        dbSet.Remove(entity);
+        await context.SaveChangesAsync();
+    }
 }
+
