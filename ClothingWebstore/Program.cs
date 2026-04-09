@@ -15,11 +15,6 @@ namespace ClothingWebstore
     {
         static async Task Main(string[] args)
         {
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile("appsettings.json", optional: false)
-                .Build();
-
             var services = new ServiceCollection();
 
             services.AddDbContext<WebshopDbContext>();
