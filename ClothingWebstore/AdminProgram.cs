@@ -379,7 +379,7 @@ namespace ClothingWebstore
             {
                 Console.Clear();
                 new Window("Statistics", 0, 0, Menu.ReturnSimpleTextList("All statistics for shop")).Draw();
-                new Window("Navigation", 40, 0, Menu.ReturnInstructionStatisticsList()).Draw();
+                new Window("Navigation", 60, 0, Menu.ReturnInstructionStatisticsList()).Draw();
 
                 ConsoleKeyInfo key = Console.ReadKey(true);
 
@@ -414,7 +414,7 @@ namespace ClothingWebstore
             var topProducts = await service.GetBestSellingProductsAsync(amount);
 
             var rows = topProducts.Select(p => $"{p.Name} - {p.Price:C} ({p.Brand.Name})").ToList();
-            new Window("Best Selling Products", 0, 10, rows).Draw();
+            new Window("Best Selling Products", 0, 5, rows).Draw();
             Message.PressAnyKeyToContinue();
         }
 
@@ -434,7 +434,6 @@ namespace ClothingWebstore
             var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
             var topBuyingCustomers = await service.GetTopBuyingCustomersAsync(1);
 
-            Console.WriteLine("Top buying customers");
             var rows = topBuyingCustomers.Select(c => c.Name).ToList();
             new Window("Top buying customers", 0, 5, rows).Draw();
             Message.PressAnyKeyToContinue();
