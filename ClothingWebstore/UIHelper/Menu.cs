@@ -73,7 +73,7 @@ namespace ClothingWebstore.UIHelper
 
         internal static List<string> ReturnInstructionStatisticsList()
         {
-            return ["Press key", "[1] Best selling products", "[2] Total revenue", "[3] Top buying customers", "[B] Back"];
+            return ["Press key", "[1] Best selling products", "[2] Total revenue", "[3] Top buying customers", "[4] Best selling categories", "[B] Back"];
         }
 
         internal static List<string> ReturnSimpleTextList(string text)

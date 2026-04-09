@@ -399,6 +399,9 @@ namespace ClothingWebstore
                     case ConsoleKey.D3:
                         await PrintTopBuyingCustomers();
                         break;
+                    case ConsoleKey.D4:
+                        await PrintBestSellingCategories();
+                        break;
                     default:
                         Message.InvalidInput();
                         break;
@@ -413,17 +416,8 @@ namespace ClothingWebstore
             var service = scope.ServiceProvider.GetRequiredService<IProductService>();
             var topProducts = await service.GetBestSellingProductsAsync(amount);
 
-            Console.WriteLine("Best selling products");
-            foreach (var product in topProducts)
-            {
-                Console.WriteLine($"""
-                                    {product.Name}
-                                        {product.Price}
-                                        {product.ShortDescription}
-                                        {product.Brand.Name}
-
-                                    """);
-            }
+            var rows = topProducts.Select(p => $"{p.Name} - {p.Price:C} ({p.Brand.Name})").ToList();
+            new Window("Best Selling Products", 0, 10, rows).Draw();
             Message.PressAnyKeyToContinue();
         }
 
@@ -433,10 +427,7 @@ namespace ClothingWebstore
             var service = scope.ServiceProvider.GetRequiredService<IProductService>();
             var total = await service.GetTotalRevenueAsync();
 
-            Console.WriteLine($"""
-                Total revenue: 
-                {total:C}
-                """);
+            new Window("Total revenue", 0, 5, Menu.ReturnSimpleTextList($"{total:C}")).Draw();
             Message.PressAnyKeyToContinue();
         }
 
@@ -447,10 +438,19 @@ namespace ClothingWebstore
             var topBuyingCustomers = await service.GetTopBuyingCustomersAsync(1);
 
             Console.WriteLine("Top buying customers");
-            foreach(var customer in topBuyingCustomers)
-            {
-                Console.WriteLine($"{Environment.NewLine} -{customer.Name}");
-            }
+            var rows = topBuyingCustomers.Select(c => c.Name).ToList();
+            new Window("Top buying customers", 0, 5, rows).Draw();
+            Message.PressAnyKeyToContinue();
+        }
+
+        private static async Task PrintBestSellingCategories()
+        {
+            using var scope = _provider.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<ICategoryService>();
+            var categories = await service.GetBestSellingCategoriesAsync(3);
+
+            var rows = categories.Select(c => c.Name).ToList();
+            new Window("Top Categories", 0, 5, rows).Draw();
             Message.PressAnyKeyToContinue();
         }
     }

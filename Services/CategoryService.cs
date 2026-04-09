@@ -14,6 +14,8 @@ public class CategoryService(ICategoryRepository categoryRepository) : ICategory
 
     public Task<List<Category>> SearchByNameAsync(string nameQuery)
         => categoryRepository.SearchByNameAsync(nameQuery);
+    public Task<List<Category>> GetBestSellingCategoriesAsync(int count)
+        => categoryRepository.GetBestSellingCategoriesAsync(count);
 
     public void Add(Category category)
         => categoryRepository.Add(category);
