@@ -8,7 +8,7 @@ public interface ICategoryService
     Task<Category?> GetByIdAsync(int id);
     Task<List<Category>> SearchByNameAsync(string nameQuery);
     Task<List<Category>> GetBestSellingCategoriesAsync(int count);
-    void Add(Category category);
-    void Update(Category category);
-    void Delete(Category category);
+    Task AddAsync(Category category);
+    Task UpdateAsync(Category category);
+    Task DeleteAsync(Category category);
 }
