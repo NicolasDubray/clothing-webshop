@@ -1,58 +1,255 @@
-using Microsoft.Extensions.DependencyInjection;
-
 using ClothingWebstore.UIHelper;
-
-﻿using EFCore;
-
+using EFCore;
 using Entities;
-
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using Services.Interfaces;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection.Metadata.Ecma335;
 
 namespace ClothingWebstore
 {
     public class CustomerProgram
     {
+        private static List<Product> cart = new List<Product>();
+        private static IServiceProvider CustomerProvider;
         public static async Task RunCustomer(IServiceProvider provider)
         {
+            CustomerProvider = provider;
+
             while (true)
             {
                 Console.Clear();
                 Console.WriteLine(Menu.ReturnCustomerMenu());
-                string choice = Console.ReadLine();
+                string? choice = Console.ReadLine();
 
                 switch (choice)
                 {
                     case "1":
-                        GoToProductPage();
+                        await GoToProductPage();
                         break;
                     case "2":
-                        ViewCart();
+                        await ViewCart();
                         break;
                     case "b":
-                        GoBack();
+                    case "B":
+                        await GoBack();
                         break;
 
                     default:
-
-                        Console.WriteLine("Invalid input!");
-                        Thread.Sleep(1000);
-                        Console.ReadKey();
+                        Message.InvalidInput();
                         break;
                 }
             }
         }
 
-        private static void GoToProductPage()
+        private static async Task GoToProductPage()
+        {
+            using var scope = CustomerProvider.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
+            var products = await dbContext.Products.ToListAsync();
+
+
+            Console.Clear();
+            Lowest.LowestPosition = 0;
+
+            int startLeft = 2;
+            int startTop = 2;
+
+            int boxWidth = 30;
+
+            int itemsPerRow = 4;
+            int spacingX = 5;
+            int spacingY = 2;
+
+
+            var rowsOfProducts = new List<List<Product>>();
+
+            for (int i = 0; i < products.Count; i += itemsPerRow)
+            {
+                rowsOfProducts.Add(products.Skip(i).Take(itemsPerRow).ToList());
+            }
+
+            int selectedProductIndex = 0;
+            ConsoleKey key;
+            bool addtoCartMode = false;
+
+
+            do
+            {
+                Console.Clear();
+                int currentTop = startTop;
+                int globalIndex = 0;
+
+                foreach (var rowProducts in rowsOfProducts)
+                {
+                    int maxBoxHeight = 10;
+                    var windows = new List<(Window window, int height, int left)>();
+
+                    for (int i = 0; i < rowProducts.Count; i++)
+                    {
+                        var product = rowProducts[i];
+                        var rows = new List<string>
+                {
+
+                    $"{(globalIndex == selectedProductIndex ? "> " : "  ")}{product.Name}",
+                    $"Price: {product.Price} $",
+                    $"Description:"
+                };
+
+                        rows.AddRange(WrapTextLimited(product.ShortDescription, boxWidth - 5, 4));
+
+                        int boxHeight = rows.Count + 2;
+                        int left = startLeft + i * (boxWidth + spacingX);
+
+                        windows.Add((new Window(product.Id.ToString(), left, currentTop, rows), boxHeight, left));
+
+                        globalIndex++;
+                    }
+
+
+                    foreach (var (window, _, _) in windows)
+                        window.Draw();
+
+                    currentTop += maxBoxHeight + spacingY;
+                }
+
+
+                ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+                key = keyInfo.Key;
+
+
+                switch (key)
+                {
+                    case ConsoleKey.RightArrow:
+                        if (selectedProductIndex < products.Count - 1) selectedProductIndex++;
+                        break;
+                    case ConsoleKey.LeftArrow:
+                        if (selectedProductIndex > 0) selectedProductIndex--;
+                        break;
+                    case ConsoleKey.UpArrow:
+                        if (selectedProductIndex - itemsPerRow >= 0) selectedProductIndex -= itemsPerRow;
+                        break;
+                    case ConsoleKey.DownArrow:
+                        if (selectedProductIndex + itemsPerRow < products.Count) selectedProductIndex += itemsPerRow;
+                        break;
+
+                    case ConsoleKey.V:
+                        addtoCartMode = true;
+                        Console.WriteLine("Select:");
+                        break;
+
+                    case ConsoleKey.Enter:
+
+                        var selectedProduct = products[selectedProductIndex];
+
+
+                        if (addtoCartMode)
+                        {
+                            cart.Add(selectedProduct);
+
+
+                            Console.WriteLine($"{selectedProduct.Name} added to cart!");
+                            Console.ReadKey(true);
+
+                        }
+                        else
+                        {
+                            ShowProductDetails(products[selectedProductIndex], cart);
+                        }
+                        break;
+                }
+
+            } while (key != ConsoleKey.Escape);
+
+
+            Console.SetCursorPosition(0, Lowest.LowestPosition + 5);
+
+            Console.WriteLine("V  = Add to cart | ESC = Exit");
+        }
+
+        private static void ShowProductDetails(Product product, List<Product> cart)
+        {
+            ConsoleKey key;
+
+
+            do
+            {
+
+                Console.Clear();
+                Console.WriteLine($"Name: {product.Name}");
+                Console.WriteLine($"Price: {product.Price} $");
+                Console.WriteLine($"Description: {product.LongDescription}");
+                Console.WriteLine(" V + Enter = Add to cart | ESC = Exit");
+
+                var keyInfo = Console.ReadKey(true);
+                key = keyInfo.Key;
+
+                switch (key)
+                {
+                    case ConsoleKey.V:
+                        cart.Add(product);
+
+                        Console.Clear();
+                        Console.WriteLine($"{product.Name} added to cart!");
+                        Console.WriteLine("Press any key");
+                        Console.ReadKey(true);
+                        break;
+
+                }
+
+            } while (key != ConsoleKey.Escape);
+
+        }
+
+
+
+        private static List<string> WrapTextLimited(string text, int maxWidth, int maxLines)
+        {
+            var lines = new List<string>();
+            var words = text.Split(' ');
+            string currentLine = "";
+
+            foreach (var word in words)
+            {
+                if ((currentLine + " " + word).Trim().Length > maxWidth)
+                {
+                    lines.Add(currentLine);
+                    currentLine = word;
+
+                    if (lines.Count == maxLines)
+                    {
+                        lines[maxLines - 1] += "...";
+                        break;
+                    }
+                }
+                else
+                {
+                    currentLine = string.IsNullOrEmpty(currentLine) ? word : currentLine + " " + word;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(currentLine) && lines.Count < maxLines)
+                lines.Add(currentLine);
+
+            while (lines.Count < maxLines)
+                lines.Add("");
+
+            return lines;
+        }
+
+
+
+
+        private static async Task ViewCart()
         {
 
         }
 
-        private static void ViewCart()
-        {
-
-        }
-
-        private static void GoBack()
+        private static async Task GoBack()
         {
 
         }
