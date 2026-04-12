@@ -8,9 +8,10 @@ namespace ClothingWebstore.UIHelper
 {
     internal class ValidateInput
     {
-        internal static bool IsValidId(string input, List<Customer> customers) =>
+        internal static bool IsValidCustomerId(string input, List<Customer> customers) =>
             int.TryParse(input, out int id) && customers.Any(c => c.Id == id);
-
+        internal static bool IsValidProductId(string input, List<Product> products) =>
+            int.TryParse(input, out int id) && products.Any(c => c.Id == id);
 
         internal static bool IsValidName(string name) =>
             name.Length > 0 && name.Length < 64

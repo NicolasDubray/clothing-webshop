@@ -45,7 +45,7 @@ namespace ClothingWebstore.UIHelper
 
         internal static List<string> ReturnAdminStartList()
         {
-            return ["What would you like to manage?", "[1] Products", "[2] Categories", "[3] Customer", "[4] Statistics"];
+            return ["What would you like to manage?", "[1] Products", "[2] Categories", "[3] Customer", "[4] Statistics", "[5] Product deals"];
         }
 
         public static string ReturnCustomerMenu()

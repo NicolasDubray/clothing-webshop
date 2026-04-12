@@ -24,6 +24,8 @@ namespace ClothingWebstore
             {
                 Console.Clear();
                 Console.WriteLine(Menu.ReturnCustomerMenu());
+
+                await DisplayProductDeals();
                 string? choice = Console.ReadLine();
 
                 switch (choice)
@@ -252,6 +254,28 @@ namespace ClothingWebstore
         private static async Task GoBack()
         {
 
+        }
+
+        private static async Task DisplayProductDeals()
+        {
+            using var scope = CustomerProvider.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<IProductService>();
+            var productsWithDeals = await service.GetProductsWithDealsAsync();
+
+            for (int i = 0; i < productsWithDeals.Count && i < 3; i++)
+            {
+                var product = productsWithDeals[i];
+                List<string> productDetails = [$"Id: {product.Id}", $"{product.Name}", $"Price: {product.Price}", "Now on sale!"];
+                new Window($"Offer {i + 1}", GetLeftPosition(i), 7, productDetails).Draw();
+            }
+
+            int GetLeftPosition(int i) => i switch
+            {
+                0 => 0,
+                1 => 35,
+                2 => 65,
+                _ => 0
+            };
         }
     }
 }

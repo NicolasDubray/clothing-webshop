@@ -20,4 +20,11 @@ public class ProductRepository(WebshopDbContext context) : Repository<Product>(c
                 p.Category.Name.Contains(query))
             .ToListAsync();
     }
+
+    public Task<List<Product>> GetProductsWithDealsAsync()
+    {
+        return context.Products
+            .Where(p => p.OnSale == true)
+            .ToListAsync();
+    }
 }
