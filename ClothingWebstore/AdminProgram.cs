@@ -103,6 +103,133 @@ public class AdminProgram
         }
     }
 
+    private static async Task ManageCategories()
+    {
+        using var scope = _provider!.CreateScope();
+        var serviceCategory = scope.ServiceProvider.GetRequiredService<ICategoryService>();
+        var serviceProduct = scope.ServiceProvider.GetRequiredService<IProductService>();
+        while (true)
+        {
+            Console.Clear();
+            new Window("Choice", 0, 0, Menu.ReturnManageCategoriesList()).Draw();
+            new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
+
+            string? input = Console.ReadLine();
+
+            Console.Clear();
+            switch (input)
+            {
+                case "1":
+                    await ShowCategories(serviceCategory);
+                    break;
+
+                case "2":
+                    await AddCategory(serviceCategory);
+                    break;
+
+                case "3":
+                    await RemoveCategory(serviceProduct, serviceCategory);
+                    break;
+
+                case "B":
+                case "b":
+                    return;
+
+                default:
+                    Message.PrintInvalidInput();
+                    break;
+            }
+        }
+    }
+
+    private static async Task ShowCategories(ICategoryService service)
+    {
+        var categories = await service.GetAllAsync();
+
+        var categoryList = categories.Select(c => $"{c.Id} - {c.Name}").ToList();
+
+        new Window("Categories", 0, 0, categoryList).Draw();
+        Message.PressAnyKeyToContinue();
+    }
+
+    private static async Task RemoveCategory(IProductService serviceProduct, ICategoryService serviceCategory)
+    {
+        while (true)
+        {
+            Console.Clear();
+            new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("What category would you like to delete?")).Draw();
+            new Window("Navigation", 50, 0, Menu.ReturnInstructionList()).Draw();
+
+            var categories = await serviceCategory.GetAllAsync();
+            var rows = categories.Select(c => $"[{c.Id}] {c.Name}").ToList();
+            new Window("All categories", 0, 3, rows).Draw();
+
+            string? input = Console.ReadLine();
+
+            if (input!.Equals("B", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            if(ValidateInput.IsValidCategoryId(input, categories) && int.TryParse(input, out int id))
+            {
+                Console.Clear();
+                var category = await serviceCategory.GetByIdAsync(id);
+                if(category is null)
+                    continue;
+
+                bool hasProducts = await serviceProduct.CategoryHasProductsAsync(category.Id);
+                if (hasProducts)
+                {
+                    Console.Clear();
+                    List<string> messageRows = ["Can´t delete this category.", "It has products linked to it."];
+                    new Window("Message", 0, 0, messageRows).Draw();
+                    Message.PressAnyKeyToContinue();
+                    continue;
+                }
+                else
+                {
+                    Console.Clear();
+                    List<string> confirmeRows = [$"Are you sure you want to delete: {category.Name}", "Press Y/y + enter for yes"];
+                    new Window("Confirm", 0, 0, confirmeRows).Draw();
+
+                    string? approved = Console.ReadLine();
+                    if (approved?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        await serviceCategory.DeleteAsync(category);
+                        return;
+                    }
+                    else
+                    {
+                        Message.PrintMessage("Category was not removed. Returning.");
+                        continue;
+                    }
+                }
+            }
+        }
+    }
+
+    private static async Task AddCategory(ICategoryService service)
+    {
+        while (true)
+        {
+            Console.Clear();
+            List<string> rows = ["Enter the name for new category.", "[B] Back"];
+            new Window("Choice", 0, 0, rows).Draw();
+            Console.Write("Category name: ");
+
+            string? input = Console.ReadLine();
+
+            if (input!.Equals("B", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            if (ValidateInput.IsValidName(input!))
+            {
+                var category = new Category{ Name = input! };
+                await service.AddAsync(category);
+                return;
+            }
+            Message.PrintInvalidInput();
+        }
+    }
 
     private static async Task ManageOrAddCustomer()
     {
