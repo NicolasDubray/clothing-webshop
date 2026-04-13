@@ -41,6 +41,10 @@ namespace ClothingWebstore
                         await SeeStatistics();
                         break;
 
+                    case "5":
+                        await ManageProductDeals();
+                        break;
+
                     case "B":
                     case "b":
                         return;
@@ -351,14 +355,14 @@ namespace ClothingWebstore
 
                 string? input = Console.ReadLine();
 
-                if (input.Equals("B", StringComparison.OrdinalIgnoreCase))
+                if (input!.Equals("B", StringComparison.OrdinalIgnoreCase))
                     return;
 
                 int id = int.Parse(input);
 
                 var customer = customers.FirstOrDefault(c => c.Id == id);
 
-                if(ValidateInput.IsValidId(input, customers) && customer != null)
+                if(ValidateInput.IsValidCustomerId(input, customers) && customer != null)
                 {
                     Console.WriteLine($"Are you sure you want to delete: {customer.Name}?");
                     Console.WriteLine("Press Y/y + enter");
@@ -454,6 +458,88 @@ namespace ClothingWebstore
             var rows = categories.Select(c => c.Name).ToList();
             new Window("Top Categories", 0, 5, rows).Draw();
             Message.PressAnyKeyToContinue();
+        }
+
+        private static async Task ManageProductDeals()
+        {
+            await RemoveProductDeal();
+            await AddProductDeal();
+        }
+
+        private static async Task RemoveProductDeal()
+        {
+            using var scope = _provider.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<IProductService>();
+            var productsWithDeals = await service.GetProductsWithDealsAsync();
+
+            while (true)
+            {
+                Console.Clear();
+                new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("Choose a product to remove deal")).Draw();
+                new Window("Navigation", 50, 0, Menu.ReturnInstructionList()).Draw();
+
+                var rows = productsWithDeals.Select(p => $"[{p.Id}] {p.Name} - Price: {p.Price}").ToList();
+                new Window("Product deals", 0, 5, rows).Draw();
+
+                string? input = Console.ReadLine();
+
+                if (input!.Equals("B", StringComparison.OrdinalIgnoreCase))
+                    return;
+
+                if (ValidateInput.IsValidProductId(input!, productsWithDeals))
+                {
+                    int id = int.Parse(input!);
+                    var product = productsWithDeals.FirstOrDefault(p => p.Id == id);
+                    product!.OnSale = false;
+                    product.Price += 3;
+                    await service.UpdateAsync(product);
+                    return;
+                }
+                else
+                {
+                    Message.InvalidInput();
+                    continue;
+                }
+            }
+        }
+
+        private static async Task AddProductDeal()
+        {
+            using var scope = _provider.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<IProductService>();
+            var products = await service.GetAllAsync();
+
+            var productsWithoutDeals = products
+                .Where(p => p.OnSale == false)
+                .ToList();
+
+            while (true)
+            {
+                Console.Clear();
+                new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("Choose a product to add deal")).Draw();
+                new Window("Navigation", 50, 0, Menu.ReturnSimpleTextList("Press key + enter")).Draw();
+
+                var rows = productsWithoutDeals.Select(p => $"[{p.Id}] {p.Name} - Price: {p.Price}").ToList();
+                new Window("Products", 0, 5, rows).Draw();
+
+                string? input = Console.ReadLine();
+
+                if (ValidateInput.IsValidProductId(input!, productsWithoutDeals))
+                {
+                    int id = int.Parse(input!);
+                    var product = productsWithoutDeals.FirstOrDefault(p => p.Id == id);
+
+                    product!.OnSale = true;
+
+                    if(product.Price > 3)
+                        product.Price -= 3; 
+
+                    await service.UpdateAsync(product);
+                    return;
+                }
+                else
+                    Message.InvalidInput();
+            }
         }
     }
 }

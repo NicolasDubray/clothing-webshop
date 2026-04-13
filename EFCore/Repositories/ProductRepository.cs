@@ -21,6 +21,13 @@ public class ProductRepository(WebshopDbContext context) : Repository<Product>(c
             .ToListAsync();
     }
 
+    public Task<List<Product>> GetProductsWithDealsAsync()
+    {
+        return context.Products
+            .Where(p => p.OnSale == true)
+            .ToListAsync();
+    }       
+            
     public async Task<List<Product>> GetBestSellingProductsAsync(int count)
     {
         var topProductsIds = await context.OrderProducts

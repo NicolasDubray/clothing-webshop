@@ -26,9 +26,13 @@ namespace ClothingWebstore
             while (true)
             {
                 Console.Clear();
+               
+                
                 new Window("Webshop", 0, 0, Menu.ReturnCustomerMenuList()).Draw();
                 new Window("Navigation", 35, 0, Menu.ReturnInstructionList()).Draw();
-                new Window("Wheater", 60, 0, await ReturnApiData()).Draw();
+                new Window("Weather", 60, 0, await ReturnApiData()).Draw();
+              
+                await DisplayProductDeals();
                 string? choice = Console.ReadLine();
 
                 switch (choice)
@@ -272,24 +276,26 @@ namespace ClothingWebstore
 
         }
 
-        private static async Task PrintBestSellingProducts() //Behöver visas i boxar. 
+        private static async Task DisplayProductDeals()
         {
-            //int amount = 3;
-            //using var scope = _provider.CreateScope();
-            //var service = scope.ServiceProvider.GetRequiredService<IProductService>();
-            //var topProducts = await service.GetBestSellingProductsAsync(amount);
+            using var scope = CustomerProvider.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<IProductService>();
+            var productsWithDeals = await service.GetProductsWithDealsAsync();
 
-            //Console.WriteLine("Best selling products");
-            //foreach (var product in topProducts)
-            //{
-            //    Console.WriteLine($"""
-            //                        {product.Name}
-            //                            {product.Price}
-            //                            {product.ShortDescription}
-            //                            {product.Brand.Name}
+            for (int i = 0; i < productsWithDeals.Count && i < 3; i++)
+            {
+                var product = productsWithDeals[i];
+                List<string> productDetails = [$"Id: {product.Id}", $"{product.Name}", $"Price: {product.Price}", "Now on sale!"];
+                new Window($"Offer {i + 1}", GetLeftPosition(i), 7, productDetails).Draw();
+            }
 
-            //                        """);
-            //}
+            int GetLeftPosition(int i) => i switch
+            {
+                0 => 0,
+                1 => 35,
+                2 => 65,
+                _ => 0
+            };
         }
     }
 }
