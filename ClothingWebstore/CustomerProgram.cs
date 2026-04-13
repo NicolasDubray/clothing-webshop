@@ -40,7 +40,7 @@ namespace ClothingWebstore
                         break;
 
                     default:
-                        Message.InvalidInput();
+                        Message.PrintInvalidInput();
                         break;
                 }
             }

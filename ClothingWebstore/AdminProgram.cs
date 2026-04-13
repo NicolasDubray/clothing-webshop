@@ -12,7 +12,7 @@ namespace ClothingWebstore
 {
     public class AdminProgram
     {
-        private static IServiceProvider _provider;
+        private static IServiceProvider? _provider;
         public static async Task RunAdmin(IServiceProvider provider)
         {
             _provider = provider;
@@ -46,7 +46,7 @@ namespace ClothingWebstore
                         return;
 
                     default:
-                        Message.InvalidInput();
+                        Message.PrintInvalidInput();
                         break;
                 }
             }
@@ -96,7 +96,7 @@ namespace ClothingWebstore
                         return;
 
                     default:
-                        Message.InvalidInput();
+                        Message.PrintInvalidInput();
                         break;
                 }
             }
@@ -115,7 +115,7 @@ namespace ClothingWebstore
                 string? choice = Console.ReadLine();
                 if (choice is null)
                 {
-                    Message.InvalidInput();
+                    Message.PrintInvalidInput();
                     continue;
                 }
 
@@ -129,28 +129,28 @@ namespace ClothingWebstore
                         await ManageCustomer(customer);
                         return;
                     }
-                    Message.InvalidInput();
+                    Message.PrintInvalidInput();
                 }
             }
         }
 
         private static async Task ManageCustomer(Customer customer)
         {
-            using var scope = _provider.CreateScope();
+            using var scope = _provider!.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
-            var customerWithAddresses = await service.GetWithAddressesAsync(customer.Id);
+            var customerWithAddress = await service.GetWithAddressesAsync(customer.Id);
             while (true)
             {
                 Console.Clear();
                 new Window("Manage customer", 0, 0, Menu.ReturnSimpleTextList("What would you like to change")).Draw();
                 new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
-                Console.WriteLine(Menu.ReturnCustomerDetailsMenu(customerWithAddresses!));
+                new Window("Customer", 0, 3, Menu.ReturnCustomerDetailsList(customerWithAddress!)).Draw();
 
                 string? input = Console.ReadLine();
 
                 if (input is null)
                 {
-                    Message.InvalidInput();
+                    Message.PrintInvalidInput();
                     continue;
                 }
 
@@ -160,60 +160,60 @@ namespace ClothingWebstore
                 switch (input)
                 {
                     case "1":
-                        await UpdateCustomerProperty(customerWithAddresses!,
+                        await UpdateCustomerProperty(customerWithAddress!,
                             "name",
                             ValidateInput.IsValidName,
                             (c, value) => c.Name = value);
                         break;
 
                     case "2":
-                        await UpdateCustomerProperty(customerWithAddresses!,
+                        await UpdateCustomerProperty(customerWithAddress!,
                             "birth date (yyyy-MM-dd)",
                             ValidateInput.IsValidBirthDate,
                             (c, value) => c.BirthDate = DateTime.Parse(value));
                         break;
 
                     case "3":
-                        await UpdateCustomerProperty(customerWithAddresses!,
+                        await UpdateCustomerProperty(customerWithAddress!,
                             "email",
                             ValidateInput.IsValidEmail,
                             (c, value) => c.Email = value);
                         break;
 
                     case "4":
-                        await UpdateCustomerProperty(customerWithAddresses!,
+                        await UpdateCustomerProperty(customerWithAddress!,
                             "phone",
                             ValidateInput.IsValidPhone,
                             (c, value) => c.Phone = value);
                         break;
 
                     case "5":
-                        await UpdateCustomerProperty(customerWithAddresses!,
+                        await UpdateCustomerProperty(customerWithAddress!,
                             "street",
                             ValidateInput.IsValidAddress,
                             (c, value) => c.Addresses.FirstOrDefault()!.Address.StreetAddress = value);
                         break;
 
                     case "6":
-                        await UpdateCustomerProperty(customerWithAddresses!,
+                        await UpdateCustomerProperty(customerWithAddress!,
                             "city",
                             ValidateInput.IsValidName,
                             (c, value) => c.Addresses.FirstOrDefault()!.Address.City = value);
                         break;
 
                     case "7":
-                        await UpdateCustomerProperty(customerWithAddresses!,
+                        await UpdateCustomerProperty(customerWithAddress!,
                             "country",
                             ValidateInput.IsValidName,
                             (c, value) => c.Addresses.FirstOrDefault()!.Address.Country = value);
                         break;
 
                     case "8":
-                        await ListOrderHistory(customerWithAddresses!);
+                        await ListOrderHistory(customerWithAddress!);
                         break;
 
                     default:
-                        Message.InvalidInput();
+                        Message.PrintInvalidInput();
                         break;
                 }
             }
@@ -229,30 +229,30 @@ namespace ClothingWebstore
 
                 if (validate(input!))
                 {
-                    using var scope = _provider.CreateScope();
+                    using var scope = _provider!.CreateScope();
                     var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
                     update(customer, input!);
                     await service.UpdateAsync(customer);
                     return;
                 }
-                Message.InvalidInput();
+                Message.PrintInvalidInput();
             }
         }
 
         private static async Task<List<Customer>> ListAllCustomersWithId()
         {
-            using var scope = _provider.CreateScope();
+            using var scope = _provider!.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
             var customers = await service.GetAllAsync();
 
             var rows = customers.Select(p => $"[{p.Id}] {p.Name}").ToList();
-            new Window("Customers", 0, 5, rows).Draw();
+            new Window("Customers", 0, 3, rows).Draw();
             return customers;
         }
 
         private static async Task<List<Customer>> ListAllCustomersNames()
         {
-            using var scope = _provider.CreateScope();
+            using var scope = _provider!.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
             var customers = await service.GetAllAsync();
 
@@ -263,7 +263,7 @@ namespace ClothingWebstore
 
         private static async Task ListOrderHistory(Customer customer)
         {
-            using var scope = _provider.CreateScope();
+            using var scope = _provider!.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
             var customerWithOrders = await service.GetWithOrdersAsync(customer.Id);
 
@@ -273,20 +273,22 @@ namespace ClothingWebstore
 
             if (customerWithOrders?.Orders.Count != 0)
             {
+                List<string> rows = [];
                 foreach (var order in customerWithOrders!.Orders)
                 {
-                    Console.WriteLine($"Order: {order.OrderNumber}");
+                    rows.Add($"Order: {order.OrderNumber}");
 
                     foreach (var op in order.OrderProducts)
                     {
-                        Console.WriteLine($"  {op.Product.Name} x{op.ProductAmount} - {op.Product.Price:C}");
+                        rows.Add($"  {op.Product.Name} x{op.ProductAmount} - {op.Product.Price}$");
                     }
-                    Console.WriteLine();
+                    rows.Add("");
                 }
+                new Window("Orders", 0, 3, rows).Draw();
             }
             else
             {
-                Console.WriteLine("No orders found.");
+                new Window("Orders", 0, 3, Menu.ReturnSimpleTextList("No orders found.")).Draw();
             }
             if (Console.ReadLine()!.Equals("B", StringComparison.OrdinalIgnoreCase))
                 return;
@@ -302,7 +304,7 @@ namespace ClothingWebstore
             string city = GetInputForNewCustomer("City", ValidateInput.IsValidName);
             string country = GetInputForNewCustomer("Country", ValidateInput.IsValidName);
 
-            using var scope = _provider.CreateScope();
+            using var scope = _provider!.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
             await service.AddAsync(new Customer
             {
@@ -310,8 +312,8 @@ namespace ClothingWebstore
                 BirthDate = DateTime.Parse(birthDate),
                 Email = email,
                 Phone = phone,
-                Addresses = new List<AddressCustomer>
-                {
+                Addresses =
+                [
                     new AddressCustomer
                     {
                         Address = new Address
@@ -321,7 +323,7 @@ namespace ClothingWebstore
                             Country = country
                         }
                     }
-                }
+                ]
             });
         }
 
@@ -336,7 +338,7 @@ namespace ClothingWebstore
                 if (validate(input!))
                     return input!;
 
-                Message.InvalidInput();
+                Message.PrintInvalidInput();
             }
         }
 
@@ -351,31 +353,35 @@ namespace ClothingWebstore
 
                 string? input = Console.ReadLine();
 
-                if (input.Equals("B", StringComparison.OrdinalIgnoreCase))
+                if (input!.Equals("B", StringComparison.OrdinalIgnoreCase))
                     return;
 
-                int id = int.Parse(input);
-
-                var customer = customers.FirstOrDefault(c => c.Id == id);
-
-                if(ValidateInput.IsValidId(input, customers) && customer != null)
+                if(ValidateInput.IsValidId(input, customers) && int.TryParse(input, out int id))
                 {
-                    Console.WriteLine($"Are you sure you want to delete: {customer.Name}?");
-                    Console.WriteLine("Press Y/y + enter");
-                    string? sure = Console.ReadLine();
-                    if(sure?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true)
+                    var customer = customers.FirstOrDefault(c => c.Id == id);
+                    if (customer is null)
+                        continue;
+
+                    Console.Clear();
+                    List<string> rows = [$"Are you sure you want to delete: {customer.Name}?", "Press Y/y + enter"];
+                    new Window("Confirm", 0, 0, rows).Draw();
+
+                    string? approved = Console.ReadLine();
+
+                    if(approved?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true)
                     {
-                        using var scope = _provider.CreateScope();
+                        using var scope = _provider!.CreateScope();
                         var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
                         await service.DeleteAsync(customer);
                         return;
                     }
                     else
                     {
-                        return;
+                        Message.PrintMessage("Customer was not removed. Returning.");
+                        continue;
                     }
                 }
-                Message.InvalidInput();
+                Message.PrintInvalidInput();
             }
         }
 

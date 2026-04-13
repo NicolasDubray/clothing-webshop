@@ -92,5 +92,20 @@ namespace ClothingWebstore.UIHelper
 
                     """);
         }
+
+        internal static List<string> ReturnCustomerDetailsList(Customer customer)
+        {
+            var address = customer.Addresses?.FirstOrDefault()?.Address;
+            return [
+                $"[1] Name: {customer.Name}", 
+                $"[2] Birth date: {customer.BirthDate:yyyy-MM-dd}", 
+                $"[3] Email: {customer.Email}",
+                $"[4] Phone: {customer.Phone}",
+                $"[5] Street: {address!.StreetAddress}",
+                $"[6] City: {address!.City}",
+                $"[7] Country: {address!.Country}",
+                $"[8] See order history"
+                ];
+        }
     }
 }

@@ -4,24 +4,16 @@ using System.Text;
 
 namespace ClothingWebstore.UIHelper
 {
-    public class Window
+    public class Window(string header, int left, int top, List<string> textRows)
     {
-        public string Header { get; set; }
-        public int Left { get; set; }
-        public int Top { get; set; }
-        public List<string> TextRows { get; set; }
-
-        public Window(string header, int left, int top, List<string> textRows)
-        {
-            Header = header;
-            Left = left;
-            Top = top;
-            TextRows = textRows;
-        }
+        public string Header { get; set; } = header;
+        public int Left { get; set; } = left;
+        public int Top { get; set; } = top;
+        public List<string> TextRows { get; set; } = textRows;
 
         public void Draw()
         {
-            var width = TextRows.OrderByDescending(s => s.Length).FirstOrDefault().Length;
+            var width = TextRows.OrderByDescending(s => s.Length).FirstOrDefault()!.Length;
 
 
             if (width < Header.Length + 4)
