@@ -4,32 +4,16 @@ using System.Text;
 
 namespace ClothingWebstore.UIHelper
 {
-    public class Window
+    public class Window(string header, int left, int top, List<string> textRows)
     {
-        public string Header { get; set; }
-        public int Left { get; set; }
-        public int Top { get; set; }
-        public List<string> TextRows { get; set; }
-
-        /// <summary>
-        /// Takes a List<string> and draws a box around the strings.
-        /// Includes a header as well on the top of the box.
-        /// </summary>
-        /// <param name="header">Header for the top of the box</param>
-        /// <param name="left">Number of characters from the left where the box will start to be drawn (horisontally)</param>
-        /// <param name="top">Number of characters from the top where the box will start to be drawn (vertically)</param>
-        /// <param name="textRows">A list<string> that displays the strings in it, inside the box</param>
-        public Window(string header, int left, int top, List<string> textRows)
-        {
-            Header = header;
-            Left = left;
-            Top = top;
-            TextRows = textRows;
-        }
+        public string Header { get; set; } = header;
+        public int Left { get; set; } = left;
+        public int Top { get; set; } = top;
+        public List<string> TextRows { get; set; } = textRows;
 
         public void Draw()
         {
-            var width = TextRows.OrderByDescending(s => s.Length).FirstOrDefault().Length;
+            var width = TextRows.OrderByDescending(s => s.Length).FirstOrDefault()!.Length;
 
 
             if (width < Header.Length + 4)

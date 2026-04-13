@@ -6,9 +6,15 @@ namespace ClothingWebstore.UIHelper
 {
     internal class Message
     {
-        internal static void InvalidInput()
+        internal static void PrintInvalidInput()
         {
             Console.WriteLine("Invalid. Try again.");
+            Thread.Sleep(1000);
+        }
+
+        internal static void PrintMessage(string message)
+        {
+            Console.WriteLine(message);
             Thread.Sleep(1000);
         }
 
