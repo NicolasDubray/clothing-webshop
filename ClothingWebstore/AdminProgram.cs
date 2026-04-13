@@ -168,6 +168,8 @@ public class AdminProgram
                 }
                 Message.PrintInvalidInput();
             }
+            else
+                Message.PrintInvalidInput();
         }
     }
 
@@ -182,7 +184,7 @@ public class AdminProgram
             new Window("Manage customer", 0, 0, Menu.ReturnSimpleTextList("What would you like to change")).Draw();
             new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
 
-          Console.WriteLine(Menu.ReturnCustomerDetailsMenu(customerWithAddress!));
+            new Window("Customer", 0, 3, Menu.ReturnCustomerDetailsList(customerWithAddress!)).Draw();
 
             string? input = Console.ReadLine();
 
@@ -309,7 +311,7 @@ public class AdminProgram
         new Window("Order", 0, 0, Menu.ReturnSimpleTextList("Total order history")).Draw();
         new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
 
-        if (customerWithOrders?.Orders.Count != 0)
+        if (customerWithOrders?.Orders.Count > 0)
         {
             List<string> rows = [];
             foreach (var order in customerWithOrders!.Orders)
@@ -322,11 +324,11 @@ public class AdminProgram
                 }
                 rows.Add("");
             }
-            new Window("Orders", 0, 3, rows).Draw();
+            new Window("Orders", 0, 5, rows).Draw();
         }
         else
         {
-            new Window("Orders", 0, 3, Menu.ReturnSimpleTextList("No orders found.")).Draw();
+            new Window("Orders", 0, 5, Menu.ReturnSimpleTextList("No orders found.")).Draw();
         }
         if (Console.ReadLine()!.Equals("B", StringComparison.OrdinalIgnoreCase))
             return;
@@ -393,8 +395,6 @@ public class AdminProgram
 
             if (input!.Equals("B", StringComparison.OrdinalIgnoreCase))
                 return;
-
-            
 
             if (ValidateInput.IsValidCustomerId(input, customers) && int.TryParse(input, out int id))
             {
@@ -781,7 +781,7 @@ public class AdminProgram
             var service = scope.ServiceProvider.GetRequiredService<IProductService>();
             var total = await service.GetTotalRevenueAsync();
 
-            new Window("Total revenue", 0, 5, Menu.ReturnSimpleTextList($"{total:C}")).Draw();
+            new Window("Total revenue", 0, 5, Menu.ReturnSimpleTextList($"{total}$")).Draw();
             Message.PressAnyKeyToContinue();
         }
 
@@ -789,7 +789,7 @@ public class AdminProgram
         {
             using var scope = _provider!.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
-            var topBuyingCustomers = await service.GetTopBuyingCustomersAsync(1);
+            var topBuyingCustomers = await service.GetTopBuyingCustomersAsync(3);
 
             var rows = topBuyingCustomers.Select(c => c.Name).ToList();
             new Window("Top buying customers", 0, 5, rows).Draw();
@@ -809,11 +809,13 @@ public class AdminProgram
 
         private static async Task ManageProductDeals()
         {
-            await RemoveProductDeal();
-            await AddProductDeal();
+            if(await RemoveProductDeal())
+            {
+                await AddProductDeal();
+            }
         }
 
-        private static async Task RemoveProductDeal()
+        private static async Task<bool> RemoveProductDeal()
         {
             using var scope = _provider!.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<IProductService>();
@@ -831,7 +833,7 @@ public class AdminProgram
                 string? input = Console.ReadLine();
 
                 if (input!.Equals("B", StringComparison.OrdinalIgnoreCase))
-                    return;
+                    return false;
 
                 if (ValidateInput.IsValidProductId(input!, productsWithDeals))
                 {
@@ -840,7 +842,7 @@ public class AdminProgram
                     product!.OnSale = false;
                     product.Price += 3;
                     await service.UpdateAsync(product);
-                    return;
+                    return true;
                 }
                 else
                 {
@@ -884,8 +886,7 @@ public class AdminProgram
                     await service.UpdateAsync(product);
                     return;
                 }
-                else
-                    Message.PrintInvalidInput();
+                Message.PrintInvalidInput();
             }
         }
 

@@ -55,7 +55,7 @@ public class ProductRepository(WebshopDbContext context) : Repository<Product>(c
     public Task<double> GetTotalRevenueAsync()
     {
         return context.OrderProducts
-            .Include(op => op.Product)
-            .SumAsync(op => op.ProductAmount * op.Product.Price);
+            .Select(op => op.ProductAmount * op.Product.Price)
+            .SumAsync();
     }
 }

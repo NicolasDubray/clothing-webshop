@@ -351,7 +351,7 @@ namespace ClothingWebstore
             {
                 var product = productsWithDeals[i];
                 List<string> productDetails = [$"Id: {product.Id}", $"{product.Name}", $"Price: {product.Price}", "Now on sale!"];
-                new Window($"Offer {i + 1}", GetLeftPosition(i), 7, productDetails).Draw();
+                new Window($"Offer {i + 1}", GetLeftPosition(i), 8, productDetails).Draw();
             }
 
             int GetLeftPosition(int i) => i switch
