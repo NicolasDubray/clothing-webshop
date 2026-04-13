@@ -20,4 +20,34 @@ public class ProductRepository(WebshopDbContext context) : Repository<Product>(c
                 p.Category.Name.Contains(query))
             .ToListAsync();
     }
+
+    public Task<List<Product>> GetProductsWithDealsAsync()
+    {
+        return context.Products
+            .Where(p => p.OnSale == true)
+            .ToListAsync();
+    }       
+            
+    public async Task<List<Product>> GetBestSellingProductsAsync(int count)
+    {
+        var topProductsIds = await context.OrderProducts
+            .GroupBy(op => op.ProductId)
+            .OrderByDescending(g => g.Sum(op => op.ProductAmount))
+            .Select(g => g.Key)
+            .Take(count)
+            .ToListAsync();
+
+        return await context.Products
+            .Include(p => p.Brand)
+            .Include(p => p.Category)
+            .Where(p => topProductsIds.Contains(p.Id))
+            .ToListAsync();
+    }
+
+    public Task<double> GetTotalRevenueAsync()
+    {
+        return context.OrderProducts
+            .Include(op => op.Product)
+            .SumAsync(op => op.ProductAmount * op.Product.Price);
+    }
 }
