@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using Services.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection.Metadata.Ecma335;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace ClothingWebstore
 {
@@ -26,12 +27,12 @@ namespace ClothingWebstore
             while (true)
             {
                 Console.Clear();
-               
-                
+
+
                 new Window("Webshop", 0, 0, Menu.ReturnCustomerMenuList()).Draw();
                 new Window("Navigation", 35, 0, Menu.ReturnInstructionList()).Draw();
                 new Window("Weather", 60, 0, await ReturnApiData()).Draw();
-              
+
                 await DisplayProductDeals();
                 string? choice = Console.ReadLine();
 
@@ -59,7 +60,26 @@ namespace ClothingWebstore
         {
             using var scope = CustomerProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
-            var products = await dbContext.Products.ToListAsync();
+
+            string currentSearch = "";
+
+            async Task<List<Product>> LoadProducts()
+            {
+                Console.Clear();
+                IQueryable<Product> query = dbContext.Products;
+
+                if (!string.IsNullOrWhiteSpace(currentSearch))
+                {
+                    query = query.Where(p =>
+                        EF.Functions.Like(p.Name, $"%{currentSearch}%") ||
+                        EF.Functions.Like(p.ShortDescription, $"%{currentSearch}%") ||
+                        EF.Functions.Like(p.LongDescription, $"%{currentSearch}%"));
+                }
+
+                return await query.ToListAsync();
+            }
+
+            var products = await LoadProducts();
 
 
             Console.Clear();
@@ -90,6 +110,9 @@ namespace ClothingWebstore
             do
             {
                 Console.Clear();
+
+                Console.WriteLine("S = Search | R = Reset | ESC = Exit\n");
+
                 int currentTop = startTop;
                 int globalIndex = 0;
 
@@ -148,7 +171,49 @@ namespace ClothingWebstore
 
                     case ConsoleKey.V:
                         addtoCartMode = true;
-                        Console.WriteLine("Select:");
+                        break;
+
+                    case ConsoleKey.S:
+                        Console.Clear();
+                        Console.SetCursorPosition(0, 0);
+                        Console.Write("Search: ");
+
+                        currentSearch = Console.ReadLine() ?? "";
+
+                        products = await LoadProducts();
+                        Console.Clear();
+
+                        Console.WriteLine($"Found {products.Count} products");
+
+                        Thread.Sleep(2000);
+
+
+                        rowsOfProducts.Clear();
+                        for (int i = 0; i < products.Count; i += itemsPerRow)
+
+                        {
+                            rowsOfProducts.Add(products.Skip(i).Take(itemsPerRow).ToList());
+
+                        }
+
+                        selectedProductIndex = 0;
+
+
+                        break;
+
+                    case ConsoleKey.R:
+                        currentSearch = "";
+                        products = await LoadProducts();
+
+                        rowsOfProducts.Clear();
+
+                        for (int i = 0; i < products.Count; i += itemsPerRow)
+                        {
+                            rowsOfProducts.Add(products.Skip(i).Take(itemsPerRow).ToList());
+                        }
+
+                        selectedProductIndex = 0;
+
                         break;
 
                     case ConsoleKey.Enter:
@@ -167,7 +232,7 @@ namespace ClothingWebstore
                         }
                         else
                         {
-                            ShowProductDetails(products[selectedProductIndex], cart);
+                            ShowProductDetails(selectedProduct, cart);
                         }
                         break;
                 }
@@ -256,8 +321,8 @@ namespace ClothingWebstore
                 return _cachedWeather;
 
             var data = await WeatherService.GetApiData();
-            
-            if(data is null)
+
+            if (data is null)
                 _cachedWeather = ["Wheater is unavailable."];
             else
                 _cachedWeather = [$"Temperature today is {data.Main.Temp}", $"and there is {data.Weather[0].MainDescription}."];
