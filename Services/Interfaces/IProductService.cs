@@ -12,6 +12,7 @@ public interface IProductService
 
     Task<List<Product>> GetBestSellingProductsAsync(int count);
     Task<double> GetTotalRevenueAsync();
+    Task<bool> CategoryHasProductsAsync(int categoryId);
     Task AddAsync(Product product);
     Task UpdateAsync(Product product);
     Task DeleteAsync(Product product);

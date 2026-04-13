@@ -10,4 +10,5 @@ public interface IProductRepository : IRepository<Product>
     Task<List<Product>> GetProductsWithDealsAsync();
     Task<List<Product>> GetBestSellingProductsAsync(int count);
     Task<double> GetTotalRevenueAsync();
+    Task<bool> CategoryHasProductsAsync(int categoryId);
 }

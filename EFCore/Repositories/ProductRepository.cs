@@ -58,4 +58,9 @@ public class ProductRepository(WebshopDbContext context) : Repository<Product>(c
             .Include(op => op.Product)
             .SumAsync(op => op.ProductAmount * op.Product.Price);
     }
+
+    public async Task<bool> CategoryHasProductsAsync(int categoryId)
+    {
+        return await context.Products.AnyAsync(p => p.CategoryId == categoryId);
+    }
 }
