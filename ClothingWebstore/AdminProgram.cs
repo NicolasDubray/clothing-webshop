@@ -12,7 +12,7 @@ namespace ClothingWebstore;
 
 public class AdminProgram
 {
-    private static IServiceProvider _provider;
+    private static IServiceProvider? _provider;
     public static async Task RunAdmin(IServiceProvider provider)
     {
         _provider = provider;
@@ -41,18 +41,18 @@ public class AdminProgram
                     await SeeStatistics();
                     break;
 
-                    case "5":
-                        await ManageProductDeals();
-                        break;
+                case "5":
+                    await ManageProductDeals();
+                    break;
 
-                    case "B":
-                    case "b":
-                        return;
+                case "B":
+                case "b":
+                    return;
 
-                    default:
-                        Message.PrintInvalidInput();
-                        break;
-                }
+                default:
+                    Message.PrintInvalidInput();
+                    break;
+                
             }
         }
     }
@@ -133,7 +133,7 @@ public class AdminProgram
                     return;
 
                 default:
-                    Message.InvalidInput();
+                    Message.PrintInvalidInput();
                     break;
             }
         }
@@ -152,7 +152,7 @@ public class AdminProgram
             string? choice = Console.ReadLine();
             if (choice is null)
             {
-                Message.InvalidInput();
+                Message.PrintInvalidInput();
                 continue;
             }
 
@@ -173,7 +173,7 @@ public class AdminProgram
 
     private static async Task ManageCustomer(Customer customer)
     {
-        using var scope = _provider.CreateScope();
+        using var scope = _provider!.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
         var customerWithAddresses = await service.GetWithAddressesAsync(customer.Id);
         while (true)
@@ -187,7 +187,7 @@ public class AdminProgram
 
             if (input is null)
             {
-                Message.InvalidInput();
+                Message.PrintInvalidInput();
                 continue;
             }
 
@@ -250,7 +250,7 @@ public class AdminProgram
                     break;
 
                 default:
-                    Message.InvalidInput();
+                    Message.PrintInvalidInput();
                     break;
             }
         }
@@ -266,19 +266,19 @@ public class AdminProgram
 
             if (validate(input!))
             {
-                using var scope = _provider.CreateScope();
+                using var scope = _provider!.CreateScope();
                 var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
                 update(customer, input!);
                 await service.UpdateAsync(customer);
                 return;
             }
-            Message.InvalidInput();
+            Message.PrintInvalidInput();
         }
     }
 
     private static async Task<List<Customer>> ListAllCustomersWithId()
     {
-        using var scope = _provider.CreateScope();
+        using var scope = _provider!.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
         var customers = await service.GetAllAsync();
 
@@ -289,7 +289,7 @@ public class AdminProgram
 
     private static async Task<List<Customer>> ListAllCustomersNames()
     {
-        using var scope = _provider.CreateScope();
+        using var scope = _provider!.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
         var customers = await service.GetAllAsync();
 
@@ -300,7 +300,7 @@ public class AdminProgram
 
     private static async Task ListOrderHistory(Customer customer)
     {
-        using var scope = _provider.CreateScope();
+        using var scope = _provider!.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
         var customerWithOrders = await service.GetWithOrdersAsync(customer.Id);
 
@@ -339,7 +339,7 @@ public class AdminProgram
         string city = GetInputForNewCustomer("City", ValidateInput.IsValidName);
         string country = GetInputForNewCustomer("Country", ValidateInput.IsValidName);
 
-        using var scope = _provider.CreateScope();
+        using var scope = _provider!.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
         await service.AddAsync(new Customer
         {
@@ -373,7 +373,7 @@ public class AdminProgram
             if (validate(input!))
                 return input!;
 
-            Message.InvalidInput();
+            Message.PrintInvalidInput();
         }
     }
 
@@ -388,21 +388,21 @@ public class AdminProgram
 
             string? input = Console.ReadLine();
 
-            if (input.Equals("B", StringComparison.OrdinalIgnoreCase))
+            if (input!.Equals("B", StringComparison.OrdinalIgnoreCase))
                 return;
 
             int id = int.Parse(input);
 
             var customer = customers.FirstOrDefault(c => c.Id == id);
 
-            if (ValidateInput.IsValidId(input, customers) && customer != null)
+            if (ValidateInput.IsValidCustomerId(input, customers) && customer != null)
             {
                 Console.WriteLine($"Are you sure you want to delete: {customer.Name}?");
                 Console.WriteLine("Press Y/y + enter");
                 string? sure = Console.ReadLine();
                 if (sure?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true)
                 {
-                    using var scope = _provider.CreateScope();
+                    using var scope = _provider!.CreateScope();
                     var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
                     await service.DeleteAsync(customer);
                     return;
@@ -412,7 +412,7 @@ public class AdminProgram
                     return;
                 }
             }
-            Message.InvalidInput();
+            Message.PrintInvalidInput();
         }
     }
 
@@ -430,7 +430,7 @@ public class AdminProgram
             string? choice = Console.ReadLine();
             if (choice is null)
             {
-                Message.InvalidInput();
+                Message.PrintInvalidInput();
                 continue;
             }
 
@@ -444,26 +444,26 @@ public class AdminProgram
                     await ManageProduct(product);
                     return;
                 }
-                Message.InvalidInput();
+                Message.PrintInvalidInput();
             }
         }
     }
 
     private static async Task ManageProduct(Product product)
     {
-        using var scope = _provider.CreateScope();
+        using var scope = _provider!.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<IProductService>();
         var productWithAllDetails = await service.GetAllDetailsAsync(product.Id);
 
         while (true)
         {
             Console.Clear();
-            Console.WriteLine(Menu.ReturnProductDetailsMenu(productWithAllDetails));
+            Console.WriteLine(Menu.ReturnProductDetailsMenu(productWithAllDetails!));
             string? input = Console.ReadLine();
 
             if (input is null)
             {
-                Message.InvalidInput();
+                Message.PrintInvalidInput();
                 continue;
             }
 
@@ -473,19 +473,19 @@ public class AdminProgram
             switch (input)
             {
                 case "1":
-                    await UpdateProductProperty(productWithAllDetails,
+                    await UpdateProductProperty(productWithAllDetails!,
                         "name",
                         ValidateInput.ProNameIsValid,
                         (p, value) => p.Name = value);
-                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails.Id);
+                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails!.Id);
                     break;
 
                 case "2":
                     await UpdateProductRelation(
-                        productWithAllDetails,
+                        productWithAllDetails!,
                         async () =>
                         {
-                            using var scope = _provider.CreateScope();
+                            using var scope = _provider!.CreateScope();
                             var brandService = scope.ServiceProvider.GetRequiredService<IBrandService>();
                             var brands = await brandService.GetAllAsync();
 
@@ -493,23 +493,23 @@ public class AdminProgram
                         },
                         (p, id) => p.BrandId = id
                     );
-                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails.Id);
+                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails!.Id);
                     break;
 
                 case "3":
-                    await UpdateProductProperty(productWithAllDetails,
+                    await UpdateProductProperty(productWithAllDetails!,
                         "price",
                         ValidateInput.ProPriceIsValid,
                         (p, value) => p.Price = double.Parse(value));
-                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails.Id);
+                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails!.Id);
                     break;
 
                 case "4":
                     await UpdateProductRelation(
-                        productWithAllDetails,
+                        productWithAllDetails!,
                         async () =>
                         {
-                            using var scope = _provider.CreateScope();
+                            using var scope = _provider!.CreateScope();
                             var categoryService = scope.ServiceProvider.GetRequiredService<ICategoryService>();
                             var categories = await categoryService.GetAllAsync();
 
@@ -517,27 +517,27 @@ public class AdminProgram
                         },
                         (p, id) => p.CategoryId = id
                     );
-                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails.Id);
+                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails!.Id);
                     break;
 
                 case "5":
-                    await UpdateProductProperty(productWithAllDetails,
+                    await UpdateProductProperty(productWithAllDetails!,
                         "shortDescription",
                         ValidateInput.ProShortDescriptionIsValid,
                         (p, value) => p.ShortDescription = value);
-                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails.Id);
+                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails!.Id);
                     break;
 
                 case "6":
-                    await UpdateProductProperty(productWithAllDetails,
+                    await UpdateProductProperty(productWithAllDetails!,
                         "longDescription",
                         ValidateInput.ProLongDescriptionIsValid,
                         (p, value) => p.LongDescription = value);
-                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails.Id);
+                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails!.Id);
                     break;
 
                 default:
-                    Message.InvalidInput();
+                    Message.PrintInvalidInput();
                     return;
             }
         }
@@ -547,7 +547,7 @@ public class AdminProgram
 
     private static async Task UpdateProductRelation(Product product, Func<Task<List<(int Id, string Name)>>> getItems, Action<Product, int> update)
     {
-        using var scope = _provider.CreateScope();
+        using var scope = _provider!.CreateScope();
         var productService = scope.ServiceProvider.GetRequiredService<IProductService>();
 
         Console.Clear();
@@ -590,20 +590,20 @@ public class AdminProgram
 
             if (validate(input!))
             {
-                using var scope = _provider.CreateScope();
+                using var scope = _provider!.CreateScope();
                 var service = scope.ServiceProvider.GetRequiredService<IProductService>();
 
                 update(product, input!);
                 await service.UpdateAsync(product);
                 return;
             }
-            Message.InvalidInput();
+            Message.PrintInvalidInput();
         }
     }
 
     private static async Task<List<Product>> ListAllProducts()
     {
-        using var scope = _provider.CreateScope();
+        using var scope = _provider!.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<IProductService>();
         var products = await service.GetAllAsync();
 
@@ -626,7 +626,7 @@ public class AdminProgram
 
             string? input = Console.ReadLine();
 
-            if (input.Equals("B", StringComparison.OrdinalIgnoreCase))
+            if (input!.Equals("B", StringComparison.OrdinalIgnoreCase))
                 return;
 
             int id = int.Parse(input);
@@ -635,12 +635,12 @@ public class AdminProgram
 
             if (ValidateInput.IsValidProId(input, products) && products != null)
             {
-                Console.WriteLine($"Are you sure you want to delete: {product.Name}?");
+                Console.WriteLine($"Are you sure you want to delete: {product!.Name}?");
                 Console.WriteLine("Press Y/y + enter");
                 string? sure = Console.ReadLine();
                 if (sure?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true)
                 {
-                    using var scope = _provider.CreateScope();
+                    using var scope = _provider!.CreateScope();
                     var service = scope.ServiceProvider.GetRequiredService<IProductService>();
                     var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
 
@@ -653,7 +653,7 @@ public class AdminProgram
                     return;
                 }
             }
-            Message.InvalidInput();
+            Message.PrintInvalidInput();
         }
     }
 
@@ -672,7 +672,7 @@ public class AdminProgram
         string longDescription = GetInputForNewProduct("Long Description",
             ValidateInput.ProLongDescriptionIsValid);
 
-        using var scope = _provider.CreateScope();
+        using var scope = _provider!.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<IProductService>();
         var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
 
@@ -705,7 +705,7 @@ public class AdminProgram
             if (validate(input!))
                 return input!;
 
-            Message.InvalidInput();
+            Message.PrintInvalidInput();
         }
     }
 
@@ -713,7 +713,7 @@ public class AdminProgram
     {
         Console.Clear();
 
-        using var scope = _provider.CreateScope();
+        using var scope = _provider!.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<IProductService>();
         var products = await service.GetAllAsync();
 
@@ -754,7 +754,7 @@ public class AdminProgram
                         await PrintBestSellingCategories();
                         break;
                     default:
-                        Message.InvalidInput();
+                        Message.PrintInvalidInput();
                         break;
                 }
             }
@@ -763,7 +763,7 @@ public class AdminProgram
         private static async Task PrintBestSellingProducts()
         {
             int amount = 3;
-            using var scope = _provider.CreateScope();
+            using var scope = _provider!.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<IProductService>();
             var topProducts = await service.GetBestSellingProductsAsync(amount);
 
@@ -774,7 +774,7 @@ public class AdminProgram
 
         private static async Task PrintTotalRevenue()
         {
-            using var scope = _provider.CreateScope();
+            using var scope = _provider!.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<IProductService>();
             var total = await service.GetTotalRevenueAsync();
 
@@ -784,7 +784,7 @@ public class AdminProgram
 
         private static async Task PrintTopBuyingCustomers()
         {
-            using var scope = _provider.CreateScope();
+            using var scope = _provider!.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
             var topBuyingCustomers = await service.GetTopBuyingCustomersAsync(1);
 
@@ -795,7 +795,7 @@ public class AdminProgram
 
         private static async Task PrintBestSellingCategories()
         {
-            using var scope = _provider.CreateScope();
+            using var scope = _provider!.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<ICategoryService>();
             var categories = await service.GetBestSellingCategoriesAsync(3);
 
@@ -812,7 +812,7 @@ public class AdminProgram
 
         private static async Task RemoveProductDeal()
         {
-            using var scope = _provider.CreateScope();
+            using var scope = _provider!.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<IProductService>();
             var productsWithDeals = await service.GetProductsWithDealsAsync();
 
@@ -841,7 +841,7 @@ public class AdminProgram
                 }
                 else
                 {
-                    Message.InvalidInput();
+                    Message.PrintInvalidInput();
                     continue;
                 }
             }
@@ -849,7 +849,7 @@ public class AdminProgram
 
         private static async Task AddProductDeal()
         {
-            using var scope = _provider.CreateScope();
+            using var scope = _provider!.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<IProductService>();
             var products = await service.GetAllAsync();
 
@@ -882,7 +882,7 @@ public class AdminProgram
                     return;
                 }
                 else
-                    Message.InvalidInput();
+                    Message.PrintInvalidInput();
             }
         }
 
