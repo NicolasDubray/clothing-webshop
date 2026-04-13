@@ -181,7 +181,7 @@ public class AdminProgram
             Console.Clear();
             new Window("Manage customer", 0, 0, Menu.ReturnSimpleTextList("What would you like to change")).Draw();
             new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
-            Console.WriteLine(Menu.ReturnCustomerDetailsMenu(customerWithAddresses!));
+            Console.WriteLine(Menu.ReturnCustomerDetailsList(customerWithAddresses!));
 
             string? input = Console.ReadLine();
 
