@@ -780,7 +780,7 @@ public class AdminProgram
             var service = scope.ServiceProvider.GetRequiredService<IProductService>();
             var total = await service.GetTotalRevenueAsync();
 
-            new Window("Total revenue", 0, 5, Menu.ReturnSimpleTextList($"{total:C}")).Draw();
+            new Window("Total revenue", 0, 5, Menu.ReturnSimpleTextList($"{total}$")).Draw();
             Message.PressAnyKeyToContinue();
         }
 
@@ -788,7 +788,7 @@ public class AdminProgram
         {
             using var scope = _provider!.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
-            var topBuyingCustomers = await service.GetTopBuyingCustomersAsync(1);
+            var topBuyingCustomers = await service.GetTopBuyingCustomersAsync(3);
 
             var rows = topBuyingCustomers.Select(c => c.Name).ToList();
             new Window("Top buying customers", 0, 5, rows).Draw();
