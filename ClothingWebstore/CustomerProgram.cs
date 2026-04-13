@@ -16,6 +16,9 @@ namespace ClothingWebstore
     {
         private static List<Product> cart = new List<Product>();
         private static IServiceProvider CustomerProvider;
+
+        private static List<string>? _cachedWeather;
+        private static DateTime _lastFetch = DateTime.MinValue;
         public static async Task RunCustomer(IServiceProvider provider)
         {
             CustomerProvider = provider;
@@ -23,7 +26,9 @@ namespace ClothingWebstore
             while (true)
             {
                 Console.Clear();
-                Console.WriteLine(Menu.ReturnCustomerMenu());
+                new Window("Webshop", 0, 0, Menu.ReturnCustomerMenuList()).Draw();
+                new Window("Navigation", 35, 0, Menu.ReturnInstructionList()).Draw();
+                new Window("Wheater", 60, 0, await ReturnApiData()).Draw();
                 string? choice = Console.ReadLine();
 
                 switch (choice)
@@ -241,7 +246,20 @@ namespace ClothingWebstore
             return lines;
         }
 
+        private static async Task<List<string>> ReturnApiData()
+        {
+            if (_cachedWeather is not null && DateTime.Now - _lastFetch < TimeSpan.FromMinutes(5))
+                return _cachedWeather;
 
+            var data = await WeatherService.GetApiData();
+            
+            if(data is null)
+                _cachedWeather = ["Wheater is unavailable."];
+            else
+                _cachedWeather = [$"Temperature today is {data.Main.Temp}", $"and there is {data.Weather[0].MainDescription}."];
+            _lastFetch = DateTime.Now;
+            return _cachedWeather;
+        }
 
 
         private static async Task ViewCart()

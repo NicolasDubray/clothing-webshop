@@ -61,6 +61,11 @@ namespace ClothingWebstore.UIHelper
 
         }
 
+        internal static List<string> ReturnCustomerMenuList()
+        {
+            return ["Welcome to Stack over fits!", "", "What would you like to do?", "[1] View product page", "[2] View cart"];
+        }
+
         internal static List<string> ReturnInstructionList()
         {
             return ["Press key + enter", "[B] Back"];
