@@ -271,5 +271,25 @@ namespace ClothingWebstore
         {
 
         }
+
+        private static async Task PrintBestSellingProducts() //Behöver visas i boxar. 
+        {
+            //int amount = 3;
+            //using var scope = _provider.CreateScope();
+            //var service = scope.ServiceProvider.GetRequiredService<IProductService>();
+            //var topProducts = await service.GetBestSellingProductsAsync(amount);
+
+            //Console.WriteLine("Best selling products");
+            //foreach (var product in topProducts)
+            //{
+            //    Console.WriteLine($"""
+            //                        {product.Name}
+            //                            {product.Price}
+            //                            {product.ShortDescription}
+            //                            {product.Brand.Name}
+
+            //                        """);
+            //}
+        }
     }
 }

@@ -10,5 +10,6 @@ namespace Services.Interfaces
         Task<Customer?> GetWithOrdersAsync(int id);
 
         public Task<Customer?> GetWithAddressesAsync(int id);
+        Task<List<Customer>> GetTopBuyingCustomersAsync(int count);
     }
 }
