@@ -26,5 +26,20 @@ namespace EFCore.Repositories
                     .ThenInclude(ac => ac.Address)
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
+
+        public async Task<List<Customer>> GetTopBuyingCustomersAsync(int count)
+        {
+            var topCustomersIds = await context.Orders
+                .GroupBy(o => o.CustomerId)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key)
+                .Take(count)
+                .ToListAsync();
+
+            return await context.Customers
+                .Where(c => topCustomersIds.Contains(c.Id))
+                .ToListAsync();
+
+        }
     }
 }
