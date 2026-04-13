@@ -7,6 +7,7 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Services.Interfaces;
+using Services;
 
 namespace ClothingWebstore;
 
@@ -57,10 +58,19 @@ public class AdminProgram
         }
     }
 
+    private static async Task ManageCategories()
+    {
+    }
+
     private static async Task ManageProducts()
     {
         while (true)
         {
+            using var scope = _provider!.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<IProductService>();
+            var brandService = scope.ServiceProvider.GetRequiredService<IBrandService>();
+            var categoryService = scope.ServiceProvider.GetRequiredService<ICategoryService>();
+
             Console.Clear();
             new Window("Choice", 0, 0, Menu.ReturnManageProductList()).Draw();
             new Window("Choice", 25, 0, Menu.ReturnInstructionList()).Draw();
@@ -71,16 +81,16 @@ public class AdminProgram
             switch (input)
             {
                 case "1":
-                    await ShowProducts();
+                    await ShowProducts(service);
                     Message.PressAnyKeyToContinue();
                     break;
 
                 case "2":
-                    await AddProducts();
+                    await AddProducts(service, brandService, categoryService);
                     break;
 
                 case "3":
-                    await RemoveProducts();
+                    await RemoveProducts(service);
                     break;
 
                 case "4":
@@ -93,10 +103,6 @@ public class AdminProgram
         }
     }
 
-    private static async Task ManageCategories()
-    {
-        
-    }
 
     private static async Task ManageOrAddCustomer()
     {
@@ -488,7 +494,6 @@ public class AdminProgram
                         "name",
                         ValidateInput.ProNameIsValid,
                         (p, value) => p.Name = value);
-                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails!.Id);
                     break;
 
                 case "2":
@@ -510,7 +515,6 @@ public class AdminProgram
                         "price",
                         ValidateInput.ProPriceIsValid,
                         (p, value) => p.Price = double.Parse(value));
-                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails!.Id);
                     break;
 
                 case "4":
@@ -532,7 +536,6 @@ public class AdminProgram
                         "shortDescription",
                         ValidateInput.ProShortDescriptionIsValid,
                         (p, value) => p.ShortDescription = value);
-                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails!.Id);
                     break;
 
                 case "6":
@@ -540,7 +543,6 @@ public class AdminProgram
                         "longDescription",
                         ValidateInput.ProLongDescriptionIsValid,
                         (p, value) => p.LongDescription = value);
-                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails!.Id);
                     break;
 
                 default:
@@ -552,11 +554,11 @@ public class AdminProgram
 
 
 
-    private static async Task UpdateProductRelation(IProductService service, Product product, Func<Task<List<(int Id, string Name)>>> getItems, Action<Product, int> update)
+    private static async Task UpdateProductRelation(IProductService service, Product product, Func<Task<List<(int Id, string Name)>>> getOptions, Action<Product, int> update)
     {
         Console.Clear();
 
-        var items = await getItems();
+        var items = await getOptions();
 
         Console.WriteLine("Choose an option:");
         Console.WriteLine();
@@ -610,6 +612,8 @@ public class AdminProgram
         var service = scope.ServiceProvider.GetRequiredService<IProductService>();
         var products = await service.GetAllAsync();
 
+        var productList = products.Select(p => (p.Id, p.Name)).ToList();
+
         foreach (var p in products)
         {
             Console.WriteLine($"[{p.Id}] - {p.Name}");
@@ -617,15 +621,16 @@ public class AdminProgram
         return products;
     }
 
-    private static async Task RemoveProducts()
+    private static async Task RemoveProducts(IProductService service)
     {
         while (true)
         {
             Console.Clear();
             new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("What would you like to delete?")).Draw();
-            new Window("Navigation", 0, 0, Menu.ReturnInstructionList()).Draw();
+            new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
 
             var products = await ListAllProducts();
+            Console.WriteLine();
 
             string? input = Console.ReadLine();
 
@@ -643,12 +648,7 @@ public class AdminProgram
                 string? sure = Console.ReadLine();
                 if (sure?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true)
                 {
-                    using var scope = _provider!.CreateScope();
-                    var service = scope.ServiceProvider.GetRequiredService<IProductService>();
-                    var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
-
                     await service.DeleteAsync(product);
-                    await context.SaveChangesAsync();
                     return;
                 }
                 else
@@ -660,41 +660,72 @@ public class AdminProgram
         }
     }
 
-    private static async Task AddProducts()
+    private static async Task AddProducts(IProductService service, IBrandService brandService, ICategoryService categoryService)
     {
         string name = GetInputForNewProduct("Name",
             ValidateInput.ProNameIsValid);
-        string brand = GetInputForNewProduct("Brand",
-            ValidateInput.ProBrandIsValid);
-        string price = GetInputForNewProduct("Price",
-            ValidateInput.ProPriceIsValid);
-        string category = GetInputForNewProduct("Category",
-            ValidateInput.ProCategoryIsValid);
         string shortDescription = GetInputForNewProduct("Short Description",
             ValidateInput.ProShortDescriptionIsValid);
         string longDescription = GetInputForNewProduct("Long Description",
             ValidateInput.ProLongDescriptionIsValid);
+        string price = GetInputForNewProduct("Price",
+            ValidateInput.ProPriceIsValid);
 
-        using var scope = _provider!.CreateScope();
-        var service = scope.ServiceProvider.GetRequiredService<IProductService>();
-        var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
+        int brandId = await GetValidIdFromUser(
+            "Brand",
+            async () =>
+            {
+                var brands = await brandService.GetAllAsync();
+                return brands.Select(b => (b.Id, b.Name)).ToList();
+            });
+        int categoryId = await GetValidIdFromUser(
+            "Category",
+            async () =>
+            {
+                var categories = await categoryService.GetAllAsync();
+                return categories.Select(c => (c.Id, c.Name)).ToList();
+            });
+        
+        
+
 
         await service.AddAsync(new Product
         {
             Name = name,
-            Brand = new Brand
-            {
-                Name = brand
-            },
+            BrandId = brandId,
             Price = double.Parse(price),
-            Category = new Category
-            {
-                Name = category
-            },
+            CategoryId = categoryId,
             ShortDescription = shortDescription,
             LongDescription = longDescription
         });
-        await context.SaveChangesAsync();
+    }
+
+    private static async Task<int> GetValidIdFromUser(string title, Func<Task<List<(int Id, string Name)>>> getItems)
+    {
+        while (true)
+        {
+            Console.Clear();
+            Console.WriteLine($"Choose {title}:");
+            Console.WriteLine();
+
+            var items = await getItems();
+
+            foreach (var item in items)
+            {
+                Console.WriteLine($"[{item.Id}] - {item.Name}");
+            }
+
+            Console.Write("Enter ID: ");
+            var input = Console.ReadLine();
+
+            if (int.TryParse(input, out int id) && items.Any(i => i.Id == id))
+            {
+                return id;
+            }
+
+            Console.WriteLine("Invalid Choice");
+            Console.ReadLine();
+        }
     }
 
     private static string GetInputForNewProduct(string property, Func<string, bool> validate)
@@ -712,21 +743,14 @@ public class AdminProgram
         }
     }
 
-    private static async Task<List<Product>> ShowProducts()
+    private static async Task ShowProducts(IProductService service)
     {
         Console.Clear();
-
-        using var scope = _provider!.CreateScope();
-        var service = scope.ServiceProvider.GetRequiredService<IProductService>();
         var products = await service.GetAllAsync();
 
-        foreach (var p in products)
-        {
-            Console.WriteLine($"[{p.Id}] - {p.Name} - {p.Price}kr");
-            Console.WriteLine($"{p.ShortDescription}");
-            Console.WriteLine();
-        }
-        return products;
+        var productList = products.Select(p => $"[{p.Id}] - {p.Name} - {p.Price}Kr ______ {p.ShortDescription}").ToList();
+
+        new Window("Products", 0, 0, productList).Draw();
     }
             
               
