@@ -95,7 +95,7 @@ public class AdminProgram
 
     private static async Task ManageCategories()
     {
-
+        
     }
 
     private static async Task ManageOrAddCustomer()
@@ -451,12 +451,14 @@ public class AdminProgram
 
     private static async Task ManageProduct(Product product)
     {
-        using var scope = _provider!.CreateScope();
-        var service = scope.ServiceProvider.GetRequiredService<IProductService>();
-        var productWithAllDetails = await service.GetAllDetailsAsync(product.Id);
-
         while (true)
         {
+            using var scope = _provider!.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<IProductService>();
+            var brandService = scope.ServiceProvider.GetRequiredService<IBrandService>();
+            var categoryService = scope.ServiceProvider.GetRequiredService<ICategoryService>();
+            var productWithAllDetails = await service.GetAllDetailsAsync(product.Id);
+
             Console.Clear();
             Console.WriteLine(Menu.ReturnProductDetailsMenu(productWithAllDetails!));
             string? input = Console.ReadLine();
@@ -467,6 +469,7 @@ public class AdminProgram
                 continue;
             }
 
+            
             if (input.Equals("B", StringComparison.OrdinalIgnoreCase))
                 return;
 
@@ -482,18 +485,16 @@ public class AdminProgram
 
                 case "2":
                     await UpdateProductRelation(
+                        service,
                         productWithAllDetails!,
                         async () =>
                         {
-                            using var scope = _provider!.CreateScope();
-                            var brandService = scope.ServiceProvider.GetRequiredService<IBrandService>();
                             var brands = await brandService.GetAllAsync();
 
                             return brands.Select(b => (b.Id, b.Name)).ToList();
                         },
                         (p, id) => p.BrandId = id
                     );
-                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails!.Id);
                     break;
 
                 case "3":
@@ -506,18 +507,16 @@ public class AdminProgram
 
                 case "4":
                     await UpdateProductRelation(
+                        service,
                         productWithAllDetails!,
                         async () =>
                         {
-                            using var scope = _provider!.CreateScope();
-                            var categoryService = scope.ServiceProvider.GetRequiredService<ICategoryService>();
                             var categories = await categoryService.GetAllAsync();
 
                             return categories.Select(c => (c.Id, c.Name)).ToList();
                         },
                         (p, id) => p.CategoryId = id
                     );
-                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails!.Id);
                     break;
 
                 case "5":
@@ -545,11 +544,8 @@ public class AdminProgram
 
 
 
-    private static async Task UpdateProductRelation(Product product, Func<Task<List<(int Id, string Name)>>> getItems, Action<Product, int> update)
+    private static async Task UpdateProductRelation(IProductService service, Product product, Func<Task<List<(int Id, string Name)>>> getItems, Action<Product, int> update)
     {
-        using var scope = _provider!.CreateScope();
-        var productService = scope.ServiceProvider.GetRequiredService<IProductService>();
-
         Console.Clear();
 
         var items = await getItems();
@@ -569,10 +565,9 @@ public class AdminProgram
 
             if (int.TryParse(input, out int id) && items.Any(i => i.Id == id))
             {
-                update(product, id);
-                await productService.UpdateAsync(product);
+                update(product!, id);
+                await service.UpdateAsync(product!);
 
-                Console.WriteLine("Updated!");
                 break;
             }
 
