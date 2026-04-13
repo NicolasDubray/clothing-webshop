@@ -58,6 +58,10 @@ public class AdminProgram
         }
     }
 
+    private static async Task ManageCategories()
+    {
+    }
+
     private static async Task ManageProducts()
     {
         while (true)
