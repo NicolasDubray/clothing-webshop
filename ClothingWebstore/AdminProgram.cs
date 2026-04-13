@@ -8,722 +8,722 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Services.Interfaces;
 
-namespace ClothingWebstore
+namespace ClothingWebstore;
+
+public class AdminProgram
 {
-    public class AdminProgram
+    private static IServiceProvider _provider;
+    public static async Task RunAdmin(IServiceProvider provider)
     {
-        private static IServiceProvider _provider;
-        public static async Task RunAdmin(IServiceProvider provider)
+        _provider = provider;
+        while (true)
         {
-            _provider = provider;
-            while (true)
+            Console.Clear();
+            new Window("Choice", 0, 0, Menu.ReturnAdminStartList()).Draw();
+            new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
+            string? choice = Console.ReadLine();
+
+            switch (choice)
             {
-                Console.Clear();
-                new Window("Choice", 0, 0, Menu.ReturnAdminStartList()).Draw();
-                new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
-                string? choice = Console.ReadLine();
+                case "1":
+                    await ManageProducts();
+                    break;
 
-                switch (choice)
-                {
-                    case "1":
-                        await ManageProducts();
-                        break;
+                case "2":
+                    await ManageCategories();
+                    break;
 
-                    case "2":
-                        await ManageCategories();
-                        break;
+                case "3":
+                    await ManageOrAddCustomer();
+                    break;
 
-                    case "3":
-                        await ManageOrAddCustomer();
-                        break;
+                case "4":
+                    await SeeStatistics();
+                    break;
 
-                    case "4":
-                        await SeeStatistics();
-                        break;
+                case "B":
+                case "b":
+                    return;
 
-                    case "B":
-                    case "b":
-                        return;
-
-                    default:
-                        Message.InvalidInput();
-                        break;
-                }
+                default:
+                    Message.InvalidInput();
+                    break;
             }
         }
+    }
 
-        private static async Task ManageProducts()
+    private static async Task ManageProducts()
+    {
+        while (true)
         {
-            while (true)
+            Console.Clear();
+            new Window("Choice", 0, 0, Menu.ReturnManageProductList()).Draw();
+            new Window("Choice", 25, 0, Menu.ReturnInstructionList()).Draw();
+            Console.WriteLine();
+
+            string? input = Console.ReadLine();
+
+            switch (input)
             {
-                Console.Clear();
-                new Window("Choice", 0, 0, Menu.ReturnManageProductList()).Draw();
-                new Window("Choice", 25, 0, Menu.ReturnInstructionList()).Draw();
+                case "1":
+                    await ShowProducts();
+                    Message.PressAnyKeyToContinue();
+                    break;
+
+                case "2":
+                    await AddProducts();
+                    break;
+
+                case "3":
+                    await RemoveProducts();
+                    break;
+
+                case "4":
+                    await ChangeProducts();
+                    break;
+
+                default:
+                    return;
+            }
+        }
+    }
+
+    private static async Task ManageCategories()
+    {
+
+    }
+
+    private static async Task ManageOrAddCustomer()
+    {
+        while (true)
+        {
+            Console.Clear();
+            new Window("Choice", 0, 0, Menu.ReturnManageCustomerList()).Draw();
+            new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
+
+            string? input = Console.ReadLine();
+
+            switch (input)
+            {
+                case "1":
+                    await ManageCustomers();
+                    break;
+
+                case "2":
+                    await AddNewCustomer();
+                    break;
+
+                case "3":
+                    await DeleteCustomer();
+                    break;
+
+                case "4":
+                    Console.Clear();
+                    await ListAllCustomersNames();
+                    Message.PressAnyKeyToContinue();
+                    break;
+
+                case "B":
+                case "b":
+                    return;
+
+                default:
+                    Message.InvalidInput();
+                    break;
+            }
+        }
+    }
+
+    private static async Task ManageCustomers()
+    {
+        while (true)
+        {
+            Console.Clear();
+            new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("Who would you like to manage?")).Draw();
+            new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
+
+            var customers = await ListAllCustomersWithId();
+
+            string? choice = Console.ReadLine();
+            if (choice is null)
+            {
+                Message.InvalidInput();
+                continue;
+            }
+
+            if (choice.Equals("B", StringComparison.OrdinalIgnoreCase))
+                return;
+            if (int.TryParse(choice, out int id))
+            {
+                var customer = customers.FirstOrDefault(c => c.Id == id);
+                if (customer is not null)
+                {
+                    await ManageCustomer(customer);
+                    return;
+                }
+                Message.InvalidInput();
+            }
+        }
+    }
+
+    private static async Task ManageCustomer(Customer customer)
+    {
+        using var scope = _provider.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+        var customerWithAddresses = await service.GetWithAddressesAsync(customer.Id);
+        while (true)
+        {
+            Console.Clear();
+            new Window("Manage customer", 0, 0, Menu.ReturnSimpleTextList("What would you like to change")).Draw();
+            new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
+            Console.WriteLine(Menu.ReturnCustomerDetailsMenu(customerWithAddresses!));
+
+            string? input = Console.ReadLine();
+
+            if (input is null)
+            {
+                Message.InvalidInput();
+                continue;
+            }
+
+            if (input.Equals("B", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            switch (input)
+            {
+                case "1":
+                    await UpdateCustomerProperty(customerWithAddresses!,
+                        "name",
+                        ValidateInput.IsValidName,
+                        (c, value) => c.Name = value);
+                    break;
+
+                case "2":
+                    await UpdateCustomerProperty(customerWithAddresses!,
+                        "birth date (yyyy-MM-dd)",
+                        ValidateInput.IsValidBirthDate,
+                        (c, value) => c.BirthDate = DateTime.Parse(value));
+                    break;
+
+                case "3":
+                    await UpdateCustomerProperty(customerWithAddresses!,
+                        "email",
+                        ValidateInput.IsValidEmail,
+                        (c, value) => c.Email = value);
+                    break;
+
+                case "4":
+                    await UpdateCustomerProperty(customerWithAddresses!,
+                        "phone",
+                        ValidateInput.IsValidPhone,
+                        (c, value) => c.Phone = value);
+                    break;
+
+                case "5":
+                    await UpdateCustomerProperty(customerWithAddresses!,
+                        "street",
+                        ValidateInput.IsValidAddress,
+                        (c, value) => c.Addresses.FirstOrDefault()!.Address.StreetAddress = value);
+                    break;
+
+                case "6":
+                    await UpdateCustomerProperty(customerWithAddresses!,
+                        "city",
+                        ValidateInput.IsValidName,
+                        (c, value) => c.Addresses.FirstOrDefault()!.Address.City = value);
+                    break;
+
+                case "7":
+                    await UpdateCustomerProperty(customerWithAddresses!,
+                        "country",
+                        ValidateInput.IsValidName,
+                        (c, value) => c.Addresses.FirstOrDefault()!.Address.Country = value);
+                    break;
+
+                case "8":
+                    await ListOrderHistory(customerWithAddresses!);
+                    break;
+
+                default:
+                    Message.InvalidInput();
+                    break;
+            }
+        }
+    }
+
+    private static async Task UpdateCustomerProperty(Customer customer, string property, Func<string, bool> validate, Action<Customer, string> update)
+    {
+        while (true)
+        {
+            Console.Clear();
+            Console.Write($"Enter new {property}:");
+            string? input = Console.ReadLine();
+
+            if (validate(input!))
+            {
+                using var scope = _provider.CreateScope();
+                var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+                update(customer, input!);
+                await service.UpdateAsync(customer);
+                return;
+            }
+            Message.InvalidInput();
+        }
+    }
+
+    private static async Task<List<Customer>> ListAllCustomersWithId()
+    {
+        using var scope = _provider.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+        var customers = await service.GetAllAsync();
+
+        var rows = customers.Select(p => $"[{p.Id}] {p.Name}").ToList();
+        new Window("Customers", 0, 5, rows).Draw();
+        return customers;
+    }
+
+    private static async Task<List<Customer>> ListAllCustomersNames()
+    {
+        using var scope = _provider.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+        var customers = await service.GetAllAsync();
+
+        var rows = customers.Select(p => $"{p.Name}").ToList();
+        new Window("All customers", 0, 0, rows).Draw();
+        return customers;
+    }
+
+    private static async Task ListOrderHistory(Customer customer)
+    {
+        using var scope = _provider.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+        var customerWithOrders = await service.GetWithOrdersAsync(customer.Id);
+
+        Console.Clear();
+        new Window("Order", 0, 0, Menu.ReturnSimpleTextList("Total order history")).Draw();
+        new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
+
+        if (customerWithOrders?.Orders.Count != 0)
+        {
+            foreach (var order in customerWithOrders!.Orders)
+            {
+                Console.WriteLine($"Order: {order.OrderNumber}");
+
+                foreach (var op in order.OrderProducts)
+                {
+                    Console.WriteLine($"  {op.Product.Name} x{op.ProductAmount} - {op.Product.Price:C}");
+                }
                 Console.WriteLine();
-
-                string? input = Console.ReadLine();
-
-                switch (input)
-                {
-                    case "1":
-                        await ShowProducts();
-                        Message.PressAnyKeyToContinue();
-                        break;
-
-                    case "2":
-                        await AddProducts();
-                        break;
-
-                    case "3":
-                        await RemoveProducts();
-                        break;
-
-                    case "4":
-                        await ChangeProducts();
-                        break;
-
-                    default:
-                        return;
-                }
             }
         }
-
-        private static async Task ManageCategories()
+        else
         {
-
+            Console.WriteLine("No orders found.");
         }
+        if (Console.ReadLine()!.Equals("B", StringComparison.OrdinalIgnoreCase))
+            return;
+    }
 
-        private static async Task ManageOrAddCustomer()
+    private static async Task AddNewCustomer()
+    {
+        string name = GetInputForNewCustomer("Name", ValidateInput.IsValidName);
+        string birthDate = GetInputForNewCustomer("Birth date (yyyy-MM-dd)", ValidateInput.IsValidBirthDate);
+        string email = GetInputForNewCustomer("Email (xxx@xxx.xx)", ValidateInput.IsValidEmail);
+        string phone = GetInputForNewCustomer("Phone (10 digits)", ValidateInput.IsValidPhone);
+        string street = GetInputForNewCustomer("Street", ValidateInput.IsValidAddress);
+        string city = GetInputForNewCustomer("City", ValidateInput.IsValidName);
+        string country = GetInputForNewCustomer("Country", ValidateInput.IsValidName);
+
+        using var scope = _provider.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+        await service.AddAsync(new Customer
         {
-            while (true)
+            Name = name,
+            BirthDate = DateTime.Parse(birthDate),
+            Email = email,
+            Phone = phone,
+            Addresses = new List<AddressCustomer>
             {
-                Console.Clear();
-                new Window("Choice", 0, 0, Menu.ReturnManageCustomerList()).Draw();
-                new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
-
-                string? input = Console.ReadLine();
-
-                switch (input)
+                new AddressCustomer
                 {
-                    case "1":
-                        await ManageCustomers();
-                        break;
-
-                    case "2":
-                        await AddNewCustomer();
-                        break;
-
-                    case "3":
-                        await DeleteCustomer();
-                        break;
-
-                    case "4":
-                        Console.Clear();
-                        await ListAllCustomersNames();
-                        Message.PressAnyKeyToContinue();
-                        break;
-
-                    case "B":
-                    case "b":
-                        return;
-
-                    default:
-                        Message.InvalidInput();
-                        break;
-                }
-            }
-        }
-
-        private static async Task ManageCustomers()
-        {
-            while (true)
-            {
-                Console.Clear();
-                new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("Who would you like to manage?")).Draw();
-                new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
-
-                var customers = await ListAllCustomersWithId();
-
-                string? choice = Console.ReadLine();
-                if (choice is null)
-                {
-                    Message.InvalidInput();
-                    continue;
-                }
-
-                if (choice.Equals("B", StringComparison.OrdinalIgnoreCase))
-                    return;
-                if (int.TryParse(choice, out int id))
-                {
-                    var customer = customers.FirstOrDefault(c => c.Id == id);
-                    if (customer is not null)
+                    Address = new Address
                     {
-                        await ManageCustomer(customer);
-                        return;
+                        StreetAddress = street,
+                        City = city,
+                        Country = country
                     }
-                    Message.InvalidInput();
                 }
             }
-        }
+        });
+    }
 
-        private static async Task ManageCustomer(Customer customer)
+    private static string GetInputForNewCustomer(string property, Func<string, bool> validate)
+    {
+        while (true)
         {
-            using var scope = _provider.CreateScope();
-            var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
-            var customerWithAddresses = await service.GetWithAddressesAsync(customer.Id);
-            while (true)
-            {
-                Console.Clear();
-                new Window("Manage customer", 0, 0, Menu.ReturnSimpleTextList("What would you like to change")).Draw();
-                new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
-                Console.WriteLine(Menu.ReturnCustomerDetailsMenu(customerWithAddresses!));
+            Console.Clear();
+            Console.Write($"{property}: ");
+            string? input = Console.ReadLine();
 
-                string? input = Console.ReadLine();
+            if (validate(input!))
+                return input!;
 
-                if (input is null)
-                {
-                    Message.InvalidInput();
-                    continue;
-                }
-
-                if (input.Equals("B", StringComparison.OrdinalIgnoreCase))
-                    return;
-
-                switch (input)
-                {
-                    case "1":
-                        await UpdateCustomerProperty(customerWithAddresses!,
-                            "name",
-                            ValidateInput.IsValidName,
-                            (c, value) => c.Name = value);
-                        break;
-
-                    case "2":
-                        await UpdateCustomerProperty(customerWithAddresses!,
-                            "birth date (yyyy-MM-dd)",
-                            ValidateInput.IsValidBirthDate,
-                            (c, value) => c.BirthDate = DateTime.Parse(value));
-                        break;
-
-                    case "3":
-                        await UpdateCustomerProperty(customerWithAddresses!,
-                            "email",
-                            ValidateInput.IsValidEmail,
-                            (c, value) => c.Email = value);
-                        break;
-
-                    case "4":
-                        await UpdateCustomerProperty(customerWithAddresses!,
-                            "phone",
-                            ValidateInput.IsValidPhone,
-                            (c, value) => c.Phone = value);
-                        break;
-
-                    case "5":
-                        await UpdateCustomerProperty(customerWithAddresses!,
-                            "street",
-                            ValidateInput.IsValidAddress,
-                            (c, value) => c.Addresses.FirstOrDefault()!.Address.StreetAddress = value);
-                        break;
-
-                    case "6":
-                        await UpdateCustomerProperty(customerWithAddresses!,
-                            "city",
-                            ValidateInput.IsValidName,
-                            (c, value) => c.Addresses.FirstOrDefault()!.Address.City = value);
-                        break;
-
-                    case "7":
-                        await UpdateCustomerProperty(customerWithAddresses!,
-                            "country",
-                            ValidateInput.IsValidName,
-                            (c, value) => c.Addresses.FirstOrDefault()!.Address.Country = value);
-                        break;
-
-                    case "8":
-                        await ListOrderHistory(customerWithAddresses!);
-                        break;
-
-                    default:
-                        Message.InvalidInput();
-                        break;
-                }
-            }
+            Message.InvalidInput();
         }
+    }
 
-        private static async Task UpdateCustomerProperty(Customer customer, string property, Func<string, bool> validate, Action<Customer, string> update)
+    private static async Task DeleteCustomer()
+    {
+        while (true)
         {
-            while (true)
-            {
-                Console.Clear();
-                Console.Write($"Enter new {property}:");
-                string? input = Console.ReadLine();
+            Console.Clear();
+            new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("Who would you like to delete?")).Draw();
+            new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
+            var customers = await ListAllCustomersWithId();
 
-                if (validate(input!))
+            string? input = Console.ReadLine();
+
+            if (input.Equals("B", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            int id = int.Parse(input);
+
+            var customer = customers.FirstOrDefault(c => c.Id == id);
+
+            if (ValidateInput.IsValidId(input, customers) && customer != null)
+            {
+                Console.WriteLine($"Are you sure you want to delete: {customer.Name}?");
+                Console.WriteLine("Press Y/y + enter");
+                string? sure = Console.ReadLine();
+                if (sure?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true)
                 {
                     using var scope = _provider.CreateScope();
                     var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
-                    update(customer, input!);
-                    await service.UpdateAsync(customer);
+                    await service.DeleteAsync(customer);
                     return;
                 }
-                Message.InvalidInput();
+                else
+                {
+                    return;
+                }
             }
+            Message.InvalidInput();
         }
+    }
 
-        private static async Task<List<Customer>> ListAllCustomersWithId()
+    private static async Task SeeStatistics()
+    {
+
+    }
+
+
+    private static async Task ChangeProducts()
+    {
+        while (true)
         {
-            using var scope = _provider.CreateScope();
-            var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
-            var customers = await service.GetAllAsync();
-
-            var rows = customers.Select(p => $"[{p.Id}] {p.Name}").ToList();
-            new Window("Customers", 0, 5, rows).Draw();
-            return customers;
-        }
-
-        private static async Task<List<Customer>> ListAllCustomersNames()
-        {
-            using var scope = _provider.CreateScope();
-            var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
-            var customers = await service.GetAllAsync();
-
-            var rows = customers.Select(p => $"{p.Name}").ToList();
-            new Window("All customers", 0, 0, rows).Draw();
-            return customers;
-        }
-
-        private static async Task ListOrderHistory(Customer customer)
-        {
-            using var scope = _provider.CreateScope();
-            var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
-            var customerWithOrders = await service.GetWithOrdersAsync(customer.Id);
-
             Console.Clear();
-            new Window("Order", 0, 0, Menu.ReturnSimpleTextList("Total order history")).Draw();
+            new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("What would you like to change")).Draw();
             new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
 
-            if (customerWithOrders?.Orders.Count != 0)
-            {
-                foreach (var order in customerWithOrders!.Orders)
-                {
-                    Console.WriteLine($"Order: {order.OrderNumber}");
+            var products = await ListAllProducts();
 
-                    foreach (var op in order.OrderProducts)
-                    {
-                        Console.WriteLine($"  {op.Product.Name} x{op.ProductAmount} - {op.Product.Price:C}");
-                    }
-                    Console.WriteLine();
-                }
-            }
-            else
+            string? choice = Console.ReadLine();
+            if (choice is null)
             {
-                Console.WriteLine("No orders found.");
+                Message.InvalidInput();
+                continue;
             }
-            if (Console.ReadLine()!.Equals("B", StringComparison.OrdinalIgnoreCase))
+
+            if (choice.Equals("B", StringComparison.OrdinalIgnoreCase))
                 return;
-        }
-
-        private static async Task AddNewCustomer()
-        {
-            string name = GetInputForNewCustomer("Name", ValidateInput.IsValidName);
-            string birthDate = GetInputForNewCustomer("Birth date (yyyy-MM-dd)", ValidateInput.IsValidBirthDate);
-            string email = GetInputForNewCustomer("Email (xxx@xxx.xx)", ValidateInput.IsValidEmail);
-            string phone = GetInputForNewCustomer("Phone (10 digits)", ValidateInput.IsValidPhone);
-            string street = GetInputForNewCustomer("Street", ValidateInput.IsValidAddress);
-            string city = GetInputForNewCustomer("City", ValidateInput.IsValidName);
-            string country = GetInputForNewCustomer("Country", ValidateInput.IsValidName);
-
-            using var scope = _provider.CreateScope();
-            var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
-            await service.AddAsync(new Customer
+            if (int.TryParse(choice, out int id))
             {
-                Name = name,
-                BirthDate = DateTime.Parse(birthDate),
-                Email = email,
-                Phone = phone,
-                Addresses = new List<AddressCustomer>
+                var product = products.FirstOrDefault(p => p.Id == id);
+                if (product is not null)
                 {
-                    new AddressCustomer
-                    {
-                        Address = new Address
-                        {
-                            StreetAddress = street,
-                            City = city,
-                            Country = country
-                        }
-                    }
-                }
-            });
-        }
-
-        private static string GetInputForNewCustomer(string property, Func<string, bool> validate)
-        {
-            while (true)
-            {
-                Console.Clear();
-                Console.Write($"{property}: ");
-                string? input = Console.ReadLine();
-
-                if (validate(input!))
-                    return input!;
-
-                Message.InvalidInput();
-            }
-        }
-
-        private static async Task DeleteCustomer()
-        {
-            while (true)
-            {
-                Console.Clear();
-                new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("Who would you like to delete?")).Draw();
-                new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
-                var customers = await ListAllCustomersWithId();
-
-                string? input = Console.ReadLine();
-
-                if (input.Equals("B", StringComparison.OrdinalIgnoreCase))
+                    await ManageProduct(product);
                     return;
-
-                int id = int.Parse(input);
-
-                var customer = customers.FirstOrDefault(c => c.Id == id);
-
-                if (ValidateInput.IsValidId(input, customers) && customer != null)
-                {
-                    Console.WriteLine($"Are you sure you want to delete: {customer.Name}?");
-                    Console.WriteLine("Press Y/y + enter");
-                    string? sure = Console.ReadLine();
-                    if (sure?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true)
-                    {
-                        using var scope = _provider.CreateScope();
-                        var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
-                        await service.DeleteAsync(customer);
-                        return;
-                    }
-                    else
-                    {
-                        return;
-                    }
                 }
                 Message.InvalidInput();
             }
         }
+    }
 
-        private static async Task SeeStatistics()
+    private static async Task ManageProduct(Product product)
+    {
+        using var scope = _provider.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IProductService>();
+        var productWithAllDetails = await service.GetAllDetailsAsync(product.Id);
+
+        while (true)
         {
-
-        }
-
-
-        private static async Task ChangeProducts()
-        {
-            while (true)
-            {
-                Console.Clear();
-                new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("What would you like to change")).Draw();
-                new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
-
-                var products = await ListAllProducts();
-
-                string? choice = Console.ReadLine();
-                if (choice is null)
-                {
-                    Message.InvalidInput();
-                    continue;
-                }
-
-                if (choice.Equals("B", StringComparison.OrdinalIgnoreCase))
-                    return;
-                if (int.TryParse(choice, out int id))
-                {
-                    var product = products.FirstOrDefault(p => p.Id == id);
-                    if (product is not null)
-                    {
-                        await ManageProduct(product);
-                        return;
-                    }
-                    Message.InvalidInput();
-                }
-            }
-        }
-
-        private static async Task ManageProduct(Product product)
-        {
-            using var scope = _provider.CreateScope();
-            var service = scope.ServiceProvider.GetRequiredService<IProductService>();
-            var productWithAllDetails = await service.GetAllDetailsAsync(product.Id);
-
-            while (true)
-            {
-                Console.Clear();
-                Console.WriteLine(Menu.ReturnProductDetailsMenu(productWithAllDetails));
-                string? input = Console.ReadLine();
-
-                if (input is null)
-                {
-                    Message.InvalidInput();
-                    continue;
-                }
-
-                if (input.Equals("B", StringComparison.OrdinalIgnoreCase))
-                    return;
-
-                switch (input)
-                {
-                    case "1":
-                        await UpdateProductProperty(productWithAllDetails,
-                            "name",
-                            ValidateInput.ProNameIsValid,
-                            (p, value) => p.Name = value);
-                        productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails.Id);
-                        break;
-
-                    case "2":
-                        await UpdateProductRelation(
-                            productWithAllDetails,
-                            async () =>
-                            {
-                                using var scope = _provider.CreateScope();
-                                var brandService = scope.ServiceProvider.GetRequiredService<IBrandService>();
-                                var brands = await brandService.GetAllAsync();
-
-                                return brands.Select(b => (b.Id, b.Name)).ToList();
-                            },
-                            (p, id) => p.BrandId = id
-                        );
-                        productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails.Id);
-                        break;
-
-                    case "3":
-                        await UpdateProductProperty(productWithAllDetails,
-                            "price",
-                            ValidateInput.ProPriceIsValid,
-                            (p, value) => p.Price = double.Parse(value));
-                        productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails.Id);
-                        break;
-
-                    case "4":
-                        await UpdateProductRelation(
-                            productWithAllDetails,
-                            async () =>
-                            {
-                                using var scope = _provider.CreateScope();
-                                var categoryService = scope.ServiceProvider.GetRequiredService<ICategoryService>();
-                                var categories = await categoryService.GetAllAsync();
-
-                                return categories.Select(c => (c.Id, c.Name)).ToList();
-                            },
-                            (p, id) => p.CategoryId = id
-                        );
-                        productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails.Id);
-                        break;
-
-                    case "5":
-                        await UpdateProductProperty(productWithAllDetails,
-                            "shortDescription",
-                            ValidateInput.ProShortDescriptionIsValid,
-                            (p, value) => p.ShortDescription = value);
-                        productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails.Id);
-                        break;
-
-                    case "6":
-                        await UpdateProductProperty(productWithAllDetails,
-                            "longDescription",
-                            ValidateInput.ProLongDescriptionIsValid,
-                            (p, value) => p.LongDescription = value);
-                        productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails.Id);
-                        break;
-
-                    default:
-                        Message.InvalidInput();
-                        return;
-                }
-            }
-        }
-
-
-
-        private static async Task UpdateProductRelation(Product product, Func<Task<List<(int Id, string Name)>>> getItems, Action<Product, int> update)
-        {
-            using var scope = _provider.CreateScope();
-            var productService = scope.ServiceProvider.GetRequiredService<IProductService>();
-
             Console.Clear();
+            Console.WriteLine(Menu.ReturnProductDetailsMenu(productWithAllDetails));
+            string? input = Console.ReadLine();
 
-            var items = await getItems();
-
-            Console.WriteLine("Choose an option:");
-            Console.WriteLine();
-
-            foreach (var item in items)
+            if (input is null)
             {
-                Console.WriteLine($"[{item.Id}] {item.Name}");
+                Message.InvalidInput();
+                continue;
             }
 
-            while (true)
+            if (input.Equals("B", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            switch (input)
             {
-                Console.Write("Enter ID: ");
-                var input = Console.ReadLine();
-
-                if (int.TryParse(input, out int id) && items.Any(i => i.Id == id))
-                {
-                    update(product, id);
-                    await productService.UpdateAsync(product);
-
-                    Console.WriteLine("Updated!");
+                case "1":
+                    await UpdateProductProperty(productWithAllDetails,
+                        "name",
+                        ValidateInput.ProNameIsValid,
+                        (p, value) => p.Name = value);
+                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails.Id);
                     break;
-                }
 
-                Console.WriteLine("Invalid choice...");
+                case "2":
+                    await UpdateProductRelation(
+                        productWithAllDetails,
+                        async () =>
+                        {
+                            using var scope = _provider.CreateScope();
+                            var brandService = scope.ServiceProvider.GetRequiredService<IBrandService>();
+                            var brands = await brandService.GetAllAsync();
+
+                            return brands.Select(b => (b.Id, b.Name)).ToList();
+                        },
+                        (p, id) => p.BrandId = id
+                    );
+                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails.Id);
+                    break;
+
+                case "3":
+                    await UpdateProductProperty(productWithAllDetails,
+                        "price",
+                        ValidateInput.ProPriceIsValid,
+                        (p, value) => p.Price = double.Parse(value));
+                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails.Id);
+                    break;
+
+                case "4":
+                    await UpdateProductRelation(
+                        productWithAllDetails,
+                        async () =>
+                        {
+                            using var scope = _provider.CreateScope();
+                            var categoryService = scope.ServiceProvider.GetRequiredService<ICategoryService>();
+                            var categories = await categoryService.GetAllAsync();
+
+                            return categories.Select(c => (c.Id, c.Name)).ToList();
+                        },
+                        (p, id) => p.CategoryId = id
+                    );
+                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails.Id);
+                    break;
+
+                case "5":
+                    await UpdateProductProperty(productWithAllDetails,
+                        "shortDescription",
+                        ValidateInput.ProShortDescriptionIsValid,
+                        (p, value) => p.ShortDescription = value);
+                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails.Id);
+                    break;
+
+                case "6":
+                    await UpdateProductProperty(productWithAllDetails,
+                        "longDescription",
+                        ValidateInput.ProLongDescriptionIsValid,
+                        (p, value) => p.LongDescription = value);
+                    productWithAllDetails = await service.GetAllDetailsAsync(productWithAllDetails.Id);
+                    break;
+
+                default:
+                    Message.InvalidInput();
+                    return;
             }
         }
+    }
 
-        private static async Task UpdateProductProperty(Product product, string property, Func<string, bool> validate, Action<Product, string> update)
+
+
+    private static async Task UpdateProductRelation(Product product, Func<Task<List<(int Id, string Name)>>> getItems, Action<Product, int> update)
+    {
+        using var scope = _provider.CreateScope();
+        var productService = scope.ServiceProvider.GetRequiredService<IProductService>();
+
+        Console.Clear();
+
+        var items = await getItems();
+
+        Console.WriteLine("Choose an option:");
+        Console.WriteLine();
+
+        foreach (var item in items)
         {
-            while (true)
-            {
-                Console.Clear();
-                Console.Write($"Enter new {property}: ");
-                string? input = Console.ReadLine();
+            Console.WriteLine($"[{item.Id}] {item.Name}");
+        }
 
-                if (validate(input!))
+        while (true)
+        {
+            Console.Write("Enter ID: ");
+            var input = Console.ReadLine();
+
+            if (int.TryParse(input, out int id) && items.Any(i => i.Id == id))
+            {
+                update(product, id);
+                await productService.UpdateAsync(product);
+
+                Console.WriteLine("Updated!");
+                break;
+            }
+
+            Console.WriteLine("Invalid choice...");
+        }
+    }
+
+    private static async Task UpdateProductProperty(Product product, string property, Func<string, bool> validate, Action<Product, string> update)
+    {
+        while (true)
+        {
+            Console.Clear();
+            Console.Write($"Enter new {property}: ");
+            string? input = Console.ReadLine();
+
+            if (validate(input!))
+            {
+                using var scope = _provider.CreateScope();
+                var service = scope.ServiceProvider.GetRequiredService<IProductService>();
+
+                update(product, input!);
+                await service.UpdateAsync(product);
+                return;
+            }
+            Message.InvalidInput();
+        }
+    }
+
+    private static async Task<List<Product>> ListAllProducts()
+    {
+        using var scope = _provider.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IProductService>();
+        var products = await service.GetAllAsync();
+
+        foreach (var p in products)
+        {
+            Console.WriteLine($"[{p.Id}] - {p.Name}");
+        }
+        return products;
+    }
+
+    private static async Task RemoveProducts()
+    {
+        while (true)
+        {
+            Console.Clear();
+            new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("What would you like to delete?")).Draw();
+            new Window("Navigation", 0, 0, Menu.ReturnInstructionList()).Draw();
+
+            var products = await ListAllProducts();
+
+            string? input = Console.ReadLine();
+
+            if (input.Equals("B", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            int id = int.Parse(input);
+
+            var product = products.FirstOrDefault(p => p.Id == id);
+
+            if (ValidateInput.IsValidProId(input, products) && products != null)
+            {
+                Console.WriteLine($"Are you sure you want to delete: {product.Name}?");
+                Console.WriteLine("Press Y/y + enter");
+                string? sure = Console.ReadLine();
+                if (sure?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true)
                 {
                     using var scope = _provider.CreateScope();
                     var service = scope.ServiceProvider.GetRequiredService<IProductService>();
+                    var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
 
-                    update(product, input!);
-                    await service.UpdateAsync(product);
+                    await service.DeleteAsync(product);
+                    await context.SaveChangesAsync();
                     return;
                 }
-                Message.InvalidInput();
-            }
-        }
-
-        private static async Task<List<Product>> ListAllProducts()
-        {
-            using var scope = _provider.CreateScope();
-            var service = scope.ServiceProvider.GetRequiredService<IProductService>();
-            var products = await service.GetAllAsync();
-
-            foreach (var p in products)
-            {
-                Console.WriteLine($"[{p.Id}] - {p.Name}");
-            }
-            return products;
-        }
-
-        private static async Task RemoveProducts()
-        {
-            while (true)
-            {
-                Console.Clear();
-                new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("What would you like to delete?")).Draw();
-                new Window("Navigation", 0, 0, Menu.ReturnInstructionList()).Draw();
-
-                var products = await ListAllProducts();
-
-                string? input = Console.ReadLine();
-
-                if (input.Equals("B", StringComparison.OrdinalIgnoreCase))
+                else
+                {
                     return;
-
-                int id = int.Parse(input);
-
-                var product = products.FirstOrDefault(p => p.Id == id);
-
-                if (ValidateInput.IsValidProId(input, products) && products != null)
-                {
-                    Console.WriteLine($"Are you sure you want to delete: {product.Name}?");
-                    Console.WriteLine("Press Y/y + enter");
-                    string? sure = Console.ReadLine();
-                    if (sure?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true)
-                    {
-                        using var scope = _provider.CreateScope();
-                        var service = scope.ServiceProvider.GetRequiredService<IProductService>();
-                        var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
-
-                        await service.DeleteAsync(product);
-                        await context.SaveChangesAsync();
-                        return;
-                    }
-                    else
-                    {
-                        return;
-                    }
                 }
-                Message.InvalidInput();
             }
+            Message.InvalidInput();
         }
+    }
 
-        private static async Task AddProducts()
+    private static async Task AddProducts()
+    {
+        string name = GetInputForNewProduct("Name",
+            ValidateInput.ProNameIsValid);
+        string brand = GetInputForNewProduct("Brand",
+            ValidateInput.ProBrandIsValid);
+        string price = GetInputForNewProduct("Price",
+            ValidateInput.ProPriceIsValid);
+        string category = GetInputForNewProduct("Category",
+            ValidateInput.ProCategoryIsValid);
+        string shortDescription = GetInputForNewProduct("Short Description",
+            ValidateInput.ProShortDescriptionIsValid);
+        string longDescription = GetInputForNewProduct("Long Description",
+            ValidateInput.ProLongDescriptionIsValid);
+
+        using var scope = _provider.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IProductService>();
+        var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
+
+        await service.AddAsync(new Product
         {
-            string name = GetInputForNewProduct("Name",
-                ValidateInput.ProNameIsValid);
-            string brand = GetInputForNewProduct("Brand",
-                ValidateInput.ProBrandIsValid);
-            string price = GetInputForNewProduct("Price",
-                ValidateInput.ProPriceIsValid);
-            string category = GetInputForNewProduct("Category",
-                ValidateInput.ProCategoryIsValid);
-            string shortDescription = GetInputForNewProduct("Short Description",
-                ValidateInput.ProShortDescriptionIsValid);
-            string longDescription = GetInputForNewProduct("Long Description",
-                ValidateInput.ProLongDescriptionIsValid);
-
-            using var scope = _provider.CreateScope();
-            var service = scope.ServiceProvider.GetRequiredService<IProductService>();
-            var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
-
-            await service.AddAsync(new Product
+            Name = name,
+            Brand = new Brand
             {
-                Name = name,
-                Brand = new Brand
-                {
-                    Name = brand
-                },
-                Price = double.Parse(price),
-                Category = new Category
-                {
-                    Name = category
-                },
-                ShortDescription = shortDescription,
-                LongDescription = longDescription
-            });
-            await context.SaveChangesAsync();
-        }
-
-        private static string GetInputForNewProduct(string property, Func<string, bool> validate)
-        {
-            while (true)
+                Name = brand
+            },
+            Price = double.Parse(price),
+            Category = new Category
             {
-                Console.Clear();
-                Console.Write($"{property}: ");
-                string? input = Console.ReadLine();
+                Name = category
+            },
+            ShortDescription = shortDescription,
+            LongDescription = longDescription
+        });
+        await context.SaveChangesAsync();
+    }
 
-                if (validate(input!))
-                    return input!;
-
-                Message.InvalidInput();
-            }
-        }
-
-        private static async Task<List<Product>> ShowProducts()
+    private static string GetInputForNewProduct(string property, Func<string, bool> validate)
+    {
+        while (true)
         {
             Console.Clear();
+            Console.Write($"{property}: ");
+            string? input = Console.ReadLine();
 
-            using var scope = _provider.CreateScope();
-            var service = scope.ServiceProvider.GetRequiredService<IProductService>();
-            var products = await service.GetAllAsync();
+            if (validate(input!))
+                return input!;
 
-            foreach (var p in products)
-            {
-                Console.WriteLine($"[{p.Id}] - {p.Name} - {p.Price}kr");
-                Console.WriteLine($"{p.ShortDescription}");
-                Console.WriteLine();
-            }
-            return products;
+            Message.InvalidInput();
         }
-
     }
+
+    private static async Task<List<Product>> ShowProducts()
+    {
+        Console.Clear();
+
+        using var scope = _provider.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IProductService>();
+        var products = await service.GetAllAsync();
+
+        foreach (var p in products)
+        {
+            Console.WriteLine($"[{p.Id}] - {p.Name} - {p.Price}kr");
+            Console.WriteLine($"{p.ShortDescription}");
+            Console.WriteLine();
+        }
+        return products;
+    }
+
+}
