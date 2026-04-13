@@ -24,6 +24,9 @@ public class ProductService(IProductRepository productRepository) : IProductServ
     public Task<double> GetTotalRevenueAsync()
         => productRepository.GetTotalRevenueAsync();
 
+    public Task<Product?> GetAllDetailsAsync(int id)
+        => productRepository.GetAllDetailsAsync(id);
+
     public Task AddAsync(Product product)
         => productRepository.AddAsync(product);
 

@@ -6,6 +6,7 @@ public interface IProductService
 {
     Task<List<Product>> GetAllAsync();
     Task<Product?> GetByIdAsync(int id);
+    Task<Product?> GetAllDetailsAsync(int id);
     Task<List<Product>> SearchAsync(string query);
     Task<List<Product>> GetProductsWithDealsAsync();
 

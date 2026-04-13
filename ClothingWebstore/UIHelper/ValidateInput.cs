@@ -35,5 +35,33 @@ namespace ClothingWebstore.UIHelper
 
         internal static bool IsValidPhone(string phone) =>
             phone is not null && phone.Length == 10 && phone.All(char.IsDigit);
+
+
+        // Product Side Down Here
+        internal static bool IsValidProId(string input, List<Product> products) =>
+            int.TryParse(input, out int id) && products.Any(p => p.Id == id);
+
+        internal static bool ProNameIsValid(string name) =>
+            name.Length > 0 && name.Length < 64
+            && name.All(p => char.IsLetter(p) || p == ' ');
+
+        internal static bool ProBrandIsValid(string brand) =>
+            brand.Length > 0 && brand.Length < 32
+            && brand.All(p => char.IsLetter(p) || p == ' ');
+
+        internal static bool ProPriceIsValid(string price) =>
+            price is not null && price.All(char.IsDigit) && double.TryParse(price, out double _);
+
+        internal static bool ProCategoryIsValid(string cat) =>
+            cat.Length > 0 && cat.Length < 32
+            && cat.All(p => char.IsLetter(p));
+
+        internal static bool ProShortDescriptionIsValid(string shortDescr) =>
+            shortDescr.Length > 0 && shortDescr.Length < 100
+            && shortDescr is not null;
+
+        internal static bool ProLongDescriptionIsValid(string longDescr) =>
+            longDescr.Length >= 0 && longDescr.Length <= 500
+            && longDescr is not null;
     }
 }

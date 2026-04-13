@@ -100,9 +100,46 @@ namespace ClothingWebstore.UIHelper
 
                     [8] See order history
 
+                    [B] Back
+
                     """);
         }
 
+        internal static List<string> ReturnManageProductList()
+        {
+            return [" ", 
+                              "[1] Show Products",
+                              "| |",
+                              "[2] Add Product",
+                              "| |",
+                              "[3] Remove Product",
+                              "| |",
+                              "[4] Change Product", 
+                              " "];
+        }
+
+        internal static string ReturnProductDetailsMenu(Product product)
+        {
+            return ($"""
+                What would you like to change?
+                Press key + enter and write in new value.
+
+                [1] Product Name: {product.Name}
+                | |
+                [2] Brand: {product.Brand.Name}
+                | |
+                [3] Price: {product.Price}
+                | |
+                [4] Category: {product.Category.Name}
+                | |
+                [5] Short Description: {product.ShortDescription}
+                | |
+                [6] Long Description: {product.LongDescription}
+
+                [B] Return
+                """);
+        }           
+                    
         internal static List<string> ReturnCustomerDetailsList(Customer customer)
         {
             var address = customer.Addresses?.FirstOrDefault()?.Address;
