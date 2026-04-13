@@ -175,13 +175,13 @@ public class AdminProgram
     {
         using var scope = _provider!.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
-        var customerWithAddresses = await service.GetWithAddressesAsync(customer.Id);
+        var customerWithAddress = await service.GetWithAddressesAsync(customer.Id);
         while (true)
         {
             Console.Clear();
             new Window("Manage customer", 0, 0, Menu.ReturnSimpleTextList("What would you like to change")).Draw();
             new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
-            Console.WriteLine(Menu.ReturnCustomerDetailsMenu(customerWithAddresses!));
+            Console.WriteLine(Menu.ReturnCustomerDetailsMenu(customerWithAddress!));
 
             string? input = Console.ReadLine();
 
@@ -197,56 +197,56 @@ public class AdminProgram
             switch (input)
             {
                 case "1":
-                    await UpdateCustomerProperty(customerWithAddresses!,
+                    await UpdateCustomerProperty(customerWithAddress!,
                         "name",
                         ValidateInput.IsValidName,
                         (c, value) => c.Name = value);
                     break;
 
                 case "2":
-                    await UpdateCustomerProperty(customerWithAddresses!,
+                    await UpdateCustomerProperty(customerWithAddress!,
                         "birth date (yyyy-MM-dd)",
                         ValidateInput.IsValidBirthDate,
                         (c, value) => c.BirthDate = DateTime.Parse(value));
                     break;
 
                 case "3":
-                    await UpdateCustomerProperty(customerWithAddresses!,
+                    await UpdateCustomerProperty(customerWithAddress!,
                         "email",
                         ValidateInput.IsValidEmail,
                         (c, value) => c.Email = value);
                     break;
 
                 case "4":
-                    await UpdateCustomerProperty(customerWithAddresses!,
+                    await UpdateCustomerProperty(customerWithAddress!,
                         "phone",
                         ValidateInput.IsValidPhone,
                         (c, value) => c.Phone = value);
                     break;
 
                 case "5":
-                    await UpdateCustomerProperty(customerWithAddresses!,
+                    await UpdateCustomerProperty(customerWithAddress!,
                         "street",
                         ValidateInput.IsValidAddress,
                         (c, value) => c.Addresses.FirstOrDefault()!.Address.StreetAddress = value);
                     break;
 
                 case "6":
-                    await UpdateCustomerProperty(customerWithAddresses!,
+                    await UpdateCustomerProperty(customerWithAddress!,
                         "city",
                         ValidateInput.IsValidName,
                         (c, value) => c.Addresses.FirstOrDefault()!.Address.City = value);
                     break;
 
                 case "7":
-                    await UpdateCustomerProperty(customerWithAddresses!,
+                    await UpdateCustomerProperty(customerWithAddress!,
                         "country",
                         ValidateInput.IsValidName,
                         (c, value) => c.Addresses.FirstOrDefault()!.Address.Country = value);
                     break;
 
                 case "8":
-                    await ListOrderHistory(customerWithAddresses!);
+                    await ListOrderHistory(customerWithAddress!);
                     break;
 
                 default:
@@ -283,7 +283,7 @@ public class AdminProgram
         var customers = await service.GetAllAsync();
 
         var rows = customers.Select(p => $"[{p.Id}] {p.Name}").ToList();
-        new Window("Customers", 0, 5, rows).Draw();
+        new Window("Customers", 0, 3, rows).Draw();
         return customers;
     }
 
@@ -310,20 +310,22 @@ public class AdminProgram
 
         if (customerWithOrders?.Orders.Count != 0)
         {
+            List<string> rows = [];
             foreach (var order in customerWithOrders!.Orders)
             {
-                Console.WriteLine($"Order: {order.OrderNumber}");
+                rows.Add($"Order: {order.OrderNumber}");
 
                 foreach (var op in order.OrderProducts)
                 {
-                    Console.WriteLine($"  {op.Product.Name} x{op.ProductAmount} - {op.Product.Price:C}");
+                    rows.Add($"  {op.Product.Name} x{op.ProductAmount} - {op.Product.Price:C}");
                 }
-                Console.WriteLine();
+                rows.Add("");
             }
+            new Window("Orders", 0, 3, rows).Draw();
         }
         else
         {
-            Console.WriteLine("No orders found.");
+            new Window("Orders", 0, 3, Menu.ReturnSimpleTextList("No orders found.")).Draw();
         }
         if (Console.ReadLine()!.Equals("B", StringComparison.OrdinalIgnoreCase))
             return;
@@ -347,8 +349,8 @@ public class AdminProgram
             BirthDate = DateTime.Parse(birthDate),
             Email = email,
             Phone = phone,
-            Addresses = new List<AddressCustomer>
-            {
+            Addresses =
+            [
                 new AddressCustomer
                 {
                     Address = new Address
@@ -358,7 +360,7 @@ public class AdminProgram
                         Country = country
                     }
                 }
-            }
+            ]
         });
     }
 
@@ -391,16 +393,20 @@ public class AdminProgram
             if (input!.Equals("B", StringComparison.OrdinalIgnoreCase))
                 return;
 
-            int id = int.Parse(input);
+            
 
-            var customer = customers.FirstOrDefault(c => c.Id == id);
-
-            if (ValidateInput.IsValidCustomerId(input, customers) && customer != null)
+            if (ValidateInput.IsValidCustomerId(input, customers) && int.TryParse(input, out int id))
             {
-                Console.WriteLine($"Are you sure you want to delete: {customer.Name}?");
-                Console.WriteLine("Press Y/y + enter");
-                string? sure = Console.ReadLine();
-                if (sure?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true)
+                var customer = customers.FirstOrDefault(c => c.Id == id);
+                if (customer is null)
+                    continue;
+
+                Console.Clear();
+                List<string> rows = [$"Are you sure you want to delete: {customer.Name}", "Press Y/y + enter for yes"];
+                new Window("Confirm", 0, 0, rows).Draw();
+
+                string? approved = Console.ReadLine();
+                if (approved?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true)
                 {
                     using var scope = _provider!.CreateScope();
                     var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
@@ -409,7 +415,8 @@ public class AdminProgram
                 }
                 else
                 {
-                    return;
+                    Message.PrintMessage("Customer was not removed. Returning.");
+                    continue;
                 }
             }
             Message.PrintInvalidInput();
