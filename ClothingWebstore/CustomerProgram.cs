@@ -111,7 +111,7 @@ namespace ClothingWebstore
             {
                 Console.Clear();
 
-                Console.WriteLine("S = Search | R = Reset | ESC = Exit\n");
+                Console.WriteLine("S = Search | R = Reset | B = Exit\n");
 
                 int currentTop = startTop;
                 int globalIndex = 0;
@@ -216,6 +216,10 @@ namespace ClothingWebstore
 
                         break;
 
+                    case ConsoleKey.B:
+                        await GoBack();
+                        break;
+
                     case ConsoleKey.Enter:
 
                         var selectedProduct = products[selectedProductIndex];
@@ -237,12 +241,12 @@ namespace ClothingWebstore
                         break;
                 }
 
-            } while (key != ConsoleKey.Escape);
+            } while (key != ConsoleKey.B);
 
 
             Console.SetCursorPosition(0, Lowest.LowestPosition + 5);
 
-            Console.WriteLine("V  = Add to cart | ESC = Exit");
+            Console.WriteLine("V  = Add to cart | B = Exit");
         }
 
         private static void ShowProductDetails(Product product, List<Product> cart)
@@ -257,7 +261,7 @@ namespace ClothingWebstore
                 Console.WriteLine($"Name: {product.Name}");
                 Console.WriteLine($"Price: {product.Price} $");
                 Console.WriteLine($"Description: {product.LongDescription}");
-                Console.WriteLine(" V + Enter = Add to cart | ESC = Exit");
+                Console.WriteLine(" V = Add to cart | B = Exit");
 
                 var keyInfo = Console.ReadKey(true);
                 key = keyInfo.Key;
@@ -269,13 +273,12 @@ namespace ClothingWebstore
 
                         Console.Clear();
                         Console.WriteLine($"{product.Name} added to cart!");
-                        Console.WriteLine("Press any key");
-                        Console.ReadKey(true);
+                        Message.PressAnyKeyToContinue();
                         break;
 
                 }
 
-            } while (key != ConsoleKey.Escape);
+            } while (key != ConsoleKey.B);
 
         }
 
@@ -338,6 +341,9 @@ namespace ClothingWebstore
 
         private static async Task GoBack()
         {
+
+
+
 
         }
 
