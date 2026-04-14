@@ -124,18 +124,37 @@ namespace ClothingWebstore
                     for (int i = 0; i < rowProducts.Count; i++)
                     {
                         var product = rowProducts[i];
+                        bool isSelected = globalIndex == selectedProductIndex;
                         var rows = new List<string>
-                {
 
-                    $"{(globalIndex == selectedProductIndex ? "> " : "  ")}{product.Name}",
-                    $"Price: {product.Price} $",
-                    $"Description:"
+                {
+                        FormatProductName(product, isSelected),
+                        $"Price: {product.Price} $",
+                        $"Description:"
                 };
+
+
+                        string FormatProductName(Product product, bool isSelected)
+                        {
+
+                            string name = product.Name;
+                            if (isSelected)
+                            {
+                                return $"> {product.Name}";
+
+                            }
+
+                            return $"{product.Name}";
+
+                        }
+
+
 
                         rows.AddRange(WrapTextLimited(product.ShortDescription, boxWidth - 5, 4));
 
                         int boxHeight = rows.Count + 2;
                         int left = startLeft + i * (boxWidth + spacingX);
+
 
                         windows.Add((new Window(product.Id.ToString(), left, currentTop, rows), boxHeight, left));
 
