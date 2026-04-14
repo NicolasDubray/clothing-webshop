@@ -304,11 +304,11 @@ public class AdminProgram
 
     private static async Task ManageCustomer(Customer customer)
     {
-        using var scope = _provider!.CreateScope();
-        var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
-        var customerWithAddress = await service.GetWithAddressesAsync(customer.Id);
         while (true)
         {
+            using var scope = _provider!.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+            var customerWithAddress = await service.GetWithAddressesAsync(customer.Id);
             Console.Clear();
             new Window("Manage customer", 0, 0, Menu.ReturnSimpleTextList("What would you like to change")).Draw();
             new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
