@@ -90,7 +90,7 @@ namespace ClothingWebstore
 
             int boxWidth = 30;
 
-            int itemsPerRow = 4;
+            int itemsPerRow = 5;
             int spacingX = 5;
             int spacingY = 2;
 
@@ -111,7 +111,7 @@ namespace ClothingWebstore
             {
                 Console.Clear();
 
-                Console.WriteLine("Use Arrowkeys to navigate| Press Enter to show more details | S = Search | R = Reset | B = Exit\n");
+                Console.WriteLine("Use Arrowkeys to navigate | Press Enter to show more details | S = Search | R = Reset | B = Exit\n");
 
                 int currentTop = startTop;
                 int globalIndex = 0;
