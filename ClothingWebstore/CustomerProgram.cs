@@ -374,7 +374,7 @@ namespace ClothingWebstore
 
                 var cartLineItems = new List<string>();
                 int cartLineItemNumber = 1;
-                using var scope = CustomerProvider.CreateScope();
+                using var scope = CustomerProvider!.CreateScope();
                 var productService = scope.ServiceProvider.GetRequiredService<IProductService>();
 
                 int totalQuantity = 0;
@@ -382,7 +382,7 @@ namespace ClothingWebstore
 
                 foreach (var cartLineItem in _checkoutSession.Cart.Items)
                 {
-                    Product product = await productService.GetByIdAsync(cartLineItem.ProductId);
+                    Product? product = await productService.GetByIdAsync(cartLineItem.ProductId);
                     if (product != null)
                     {
                         string lineNumber = WrapTextLimited(cartLineItemNumber.ToString(), ListNumberColumnWidth)[0];
@@ -422,6 +422,10 @@ namespace ClothingWebstore
                 Console.Clear();
                 Window window = new Window("Cart", 0, 0, windowTextRows);
                 window.Draw();
+
+                const int topOffset = 2;
+                Console.SetCursorPosition(0, topOffset + windowTextRows.Count);
+
                 Console.WriteLine();
                 Console.WriteLine("[1] Continue to checkout");
                 Console.WriteLine("[2] Edit item quantity");
@@ -438,7 +442,14 @@ namespace ClothingWebstore
                         continue;
 
                     case "2":
-                        ShowCartItemEditMenu();
+                        if (_checkoutSession.Cart.Items.Count > 0)
+                            ShowCartItemEditMenu();
+                        else
+                        {
+                            Console.WriteLine();
+                            Console.WriteLine("The cart is empty.");
+                            Message.PressAnyKeyToContinue();
+                        }
                         continue;
 
                     case "b":
@@ -608,7 +619,7 @@ namespace ClothingWebstore
 
         private static async Task<bool> HandleLogin()
         {
-            using var scope = CustomerProvider.CreateScope();
+            using var scope = CustomerProvider!.CreateScope();
             var customerService = scope.ServiceProvider.GetRequiredService<ICustomerService>();
 
             while (true)
@@ -761,7 +772,7 @@ namespace ClothingWebstore
             );
             windowTextRows.Add(new string('\u2500', TableWidth));
 
-            using var scope = CustomerProvider.CreateScope();
+            using var scope = CustomerProvider!.CreateScope();
             var shippingService = scope.ServiceProvider.GetRequiredService<IShippingService>();
 
             var shippingOptions = await shippingService.GetAllAsync();
@@ -833,7 +844,7 @@ namespace ClothingWebstore
             );
             windowTextRows.Add(new string('\u2500', TableWidth));
 
-            using var scope = CustomerProvider.CreateScope();
+            using var scope = CustomerProvider!.CreateScope();
             var paymentService = scope.ServiceProvider.GetRequiredService<IPaymentService>();
 
             var paymentOptions = await paymentService.GetAllAsync();
@@ -887,7 +898,7 @@ namespace ClothingWebstore
 
         private static async Task PlaceOrder()
         {
-            using var scope = CustomerProvider.CreateScope();
+            using var scope = CustomerProvider!.CreateScope();
             var customerService = scope.ServiceProvider.GetRequiredService<ICustomerService>();
 
             if (_checkoutSession.Customer!.Id == 0)
