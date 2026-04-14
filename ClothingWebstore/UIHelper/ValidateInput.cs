@@ -17,25 +17,22 @@ namespace ClothingWebstore.UIHelper
             int.TryParse(input, out int id) && categories.Any(c => c.Id == id);
 
         internal static bool IsValidName(string name) =>
-            name.Length > 0 && name.Length < 64
+            name.Length > 2 && name.Length < 64
             && !string.IsNullOrWhiteSpace(name)
             && name.All(c => char.IsLetter(c) || c == ' ');
 
         internal static bool IsValidAddress(string input) =>
             !string.IsNullOrWhiteSpace(input) && input.Length >= 3;
 
-
         internal static bool IsValidBirthDate(string birthDate) =>
             DateTime.TryParseExact(birthDate, "yyyy-MM-dd", null, DateTimeStyles.None, out DateTime date)
             && date <= DateTime.Today
             && date >= DateTime.Today.AddYears(-130);
 
-
         internal static bool IsValidEmail(string email) =>
             email.Length > 4 && email.Length <= 64
             && email.IndexOf('@') > 0
             && email.IndexOf('@') < email.Length - 1;
-
 
         internal static bool IsValidPhone(string phone) =>
             phone is not null && phone.Length == 10 && phone.All(char.IsDigit);
@@ -47,10 +44,12 @@ namespace ClothingWebstore.UIHelper
             int.TryParse(input, out int id) && products.Any(p => p.Id == id);
 
         internal static bool ProNameIsValid(string name) =>
-            name.Length > 0 && name.Length < 64;
+            name.Length > 2 && name.Length < 64
+            && !string.IsNullOrWhiteSpace(name);
 
         internal static bool ProPriceIsValid(string inputPrice) =>
-            inputPrice is not null && inputPrice.All(char.IsDigit) && double.TryParse(inputPrice, out double price)
+            inputPrice is not null && inputPrice.All(char.IsDigit) 
+            && double.TryParse(inputPrice, out double price)
             && price > 0;
 
         internal static bool ProShortDescriptionIsValid(string shortDescr) =>
