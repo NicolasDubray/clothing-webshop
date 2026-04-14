@@ -1,12 +1,8 @@
+using ClothingWebstore.UIHelper;
+using EFCore;
+using Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-
-using ClothingWebstore.UIHelper;
-
-using EFCore;
-
-using Entities;
-
 using Services.Interfaces;
 
 namespace ClothingWebstore
@@ -34,6 +30,7 @@ namespace ClothingWebstore
                 new Window("Weather", 60, 0, await ReturnApiData()).Draw();
 
                 await DisplayProductDeals();
+                Console.SetCursorPosition(0, 13);
                 string? choice = Console.ReadLine();
 
                 switch (choice)
@@ -41,7 +38,7 @@ namespace ClothingWebstore
                     case "1":
                         await GoToProductPage();
                         break;
-                        
+
                     case "2":
                         await ViewCart();
                         break;
@@ -364,11 +361,11 @@ namespace ClothingWebstore
 
                 windowTextRows.Add($"{"",TableWidth}");
                 windowTextRows.Add(
-                    $"{"", -ListNumberColumnWidth}" +
-                    $"{"Product", -NameColumnWidth}" +
-                    $"{"Quantity", QuantityColumnWidth}" +
-                    $"{"Price", PriceColumnWidth}" +
-                    $"{"Total", LineTotalColumnWidth}"
+                    $"{"",-ListNumberColumnWidth}" +
+                    $"{"Product",-NameColumnWidth}" +
+                    $"{"Quantity",QuantityColumnWidth}" +
+                    $"{"Price",PriceColumnWidth}" +
+                    $"{"Total",LineTotalColumnWidth}"
                 );
                 windowTextRows.Add($"{new string('\u2500', TableWidth)}");
 
@@ -395,11 +392,11 @@ namespace ClothingWebstore
                         totalTotal += total;
 
                         windowTextRows.Add(
-                            $"{lineNumber, -ListNumberColumnWidth}" +
-                            $"{lineProductName, -NameColumnWidth}" +
-                            $"{lineQuantity, QuantityColumnWidth}" +
-                            $"{linePrice, PriceColumnWidth}" +
-                            $"{lineTotal, LineTotalColumnWidth}"
+                            $"{lineNumber,-ListNumberColumnWidth}" +
+                            $"{lineProductName,-NameColumnWidth}" +
+                            $"{lineQuantity,QuantityColumnWidth}" +
+                            $"{linePrice,PriceColumnWidth}" +
+                            $"{lineTotal,LineTotalColumnWidth}"
                         );
 
                         ++cartLineItemNumber;
@@ -407,16 +404,16 @@ namespace ClothingWebstore
                 }
 
                 windowTextRows.Add(
-                    $"{"", -ListNumberColumnWidth}" +
-                    $"{"", -NameColumnWidth}" +
+                    $"{"",-ListNumberColumnWidth}" +
+                    $"{"",-NameColumnWidth}" +
                     $"{new string('\u2500', QuantityColumnWidth / 2),QuantityColumnWidth}" +
-                    $"{"", PriceColumnWidth}" +
+                    $"{"",PriceColumnWidth}" +
                     $"{new string('\u2500', LineTotalColumnWidth / 2),LineTotalColumnWidth}"
                 );
 
                 windowTextRows.Add(
-                    $"{totalQuantity, TotalQuantityWidth}" +
-                    $"{totalTotal, TotalTotalWidth}"
+                    $"{totalQuantity,TotalQuantityWidth}" +
+                    $"{totalTotal,TotalTotalWidth}"
                 );
 
                 Console.Clear();
@@ -512,61 +509,61 @@ namespace ClothingWebstore
                 switch (currentStep)
                 {
                     case CheckoutStep.Identification:
-                    {
-                        var result = await ShowCustomerIdentificationMenu();
-
-                        switch (result)
                         {
-                            case NavigationAction.Back:
-                                return;
+                            var result = await ShowCustomerIdentificationMenu();
 
-                            case NavigationAction.Next:
-                                currentStep = CheckoutStep.Shipping;
-                                break;
+                            switch (result)
+                            {
+                                case NavigationAction.Back:
+                                    return;
+
+                                case NavigationAction.Next:
+                                    currentStep = CheckoutStep.Shipping;
+                                    break;
+                            }
+
+                            break;
                         }
-
-                        break;
-                    }
                     case CheckoutStep.Shipping:
-                    {
-                        var result = await ShowShippingOptionsMenu();
-
-                        switch (result)
                         {
-                            case NavigationAction.Back:
-                                currentStep = CheckoutStep.Identification;
-                                break;
+                            var result = await ShowShippingOptionsMenu();
 
-                            case NavigationAction.Next:
-                                currentStep = CheckoutStep.Payment;
-                                break;
+                            switch (result)
+                            {
+                                case NavigationAction.Back:
+                                    currentStep = CheckoutStep.Identification;
+                                    break;
+
+                                case NavigationAction.Next:
+                                    currentStep = CheckoutStep.Payment;
+                                    break;
+                            }
+
+                            break;
                         }
-
-                        break;
-                    }
                     case CheckoutStep.Payment:
-                    {
-                        var result = await ShowPaymentOptionsMenu();
-
-                        switch (result)
                         {
-                            case NavigationAction.Back:
-                                currentStep = CheckoutStep.Shipping;
-                                break;
+                            var result = await ShowPaymentOptionsMenu();
 
-                            case NavigationAction.Next:
-                                currentStep = CheckoutStep.Order;
-                                break;
+                            switch (result)
+                            {
+                                case NavigationAction.Back:
+                                    currentStep = CheckoutStep.Shipping;
+                                    break;
+
+                                case NavigationAction.Next:
+                                    currentStep = CheckoutStep.Order;
+                                    break;
+                            }
+
+                            break;
                         }
-
-                        break;
-                    }
                     case CheckoutStep.Order:
-                    {
-                        await PlaceOrder();
+                        {
+                            await PlaceOrder();
 
-                        return;
-                    }
+                            return;
+                        }
                 }
             }
         }
@@ -616,6 +613,20 @@ namespace ClothingWebstore
                 }
             }
         }
+        private static async Task<List<Customer>> ListAllCustomersWithId()
+        {
+            using var scope = CustomerProvider!.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+            var customers = await service.GetAllAsync();
+
+            var rows = customers.Select(p => $"[{p.Id}] {p.Name}").ToList();
+            new Window("Customers", 0, 0, rows).Draw();
+
+            const int topOffset = 2;
+            Console.SetCursorPosition(0, topOffset + rows.Count);
+
+            return customers;
+        }
 
         private static async Task<bool> HandleLogin()
         {
@@ -625,6 +636,8 @@ namespace ClothingWebstore
             while (true)
             {
                 Console.Clear();
+                await ListAllCustomersWithId();
+
                 Console.Write("Enter customer ID or [b] for back: ");
                 string? input = Console.ReadLine();
 
@@ -763,12 +776,12 @@ namespace ClothingWebstore
 
             var windowTextRows = new List<string>();
 
-            windowTextRows.Add($"{"", TableWidth}");
+            windowTextRows.Add($"{"",TableWidth}");
             windowTextRows.Add(
-                $"{"", -ListNumberColumnWidth}" +
-                $"{"Name", -NameColumnWidth}" +
-                $"{"Price", PriceColumnWidth}" +
-                $"{"Delivery time", DeliveryTimeColumnWidth}"
+                $"{"",-ListNumberColumnWidth}" +
+                $"{"Name",-NameColumnWidth}" +
+                $"{"Price",PriceColumnWidth}" +
+                $"{"Delivery time",DeliveryTimeColumnWidth}"
             );
             windowTextRows.Add(new string('\u2500', TableWidth));
 
@@ -785,9 +798,9 @@ namespace ClothingWebstore
                 string price = WrapTextLimited(option.Price.ToString(), PriceColumnWidth)[0];
 
                 windowTextRows.Add(
-                    $"{shippingOptionNumber, -ListNumberColumnWidth}" +
-                    $"{name, -NameColumnWidth}" +
-                    $"{price, PriceColumnWidth}"
+                    $"{shippingOptionNumber,-ListNumberColumnWidth}" +
+                    $"{name,-NameColumnWidth}" +
+                    $"{price,PriceColumnWidth}"
                 );
 
                 ++shippingOptionNumber;
