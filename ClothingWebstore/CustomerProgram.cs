@@ -111,7 +111,7 @@ namespace ClothingWebstore
             {
                 Console.Clear();
 
-                Console.WriteLine("S = Search | R = Reset | B = Exit\n");
+                Console.WriteLine("Use Arrowkeys to navigate| Press Enter to show more details | S = Search | R = Reset | B = Exit\n");
 
                 int currentTop = startTop;
                 int globalIndex = 0;
