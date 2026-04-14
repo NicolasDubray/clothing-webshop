@@ -14,6 +14,51 @@ namespace ClothingWebstore
     {
         static async Task Main(string[] args)
         {
+            try
+            {
+                await RunProgram();
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                Console.Clear();
+                Console.WriteLine("The program has crashed");
+                Console.WriteLine();
+                Console.WriteLine("Try using fullscreen or zooming out");
+                Console.WriteLine();
+                Console.WriteLine("Press y for more info about the error");
+                Console.WriteLine();
+                ConsoleKeyInfo input = Console.ReadKey(true);
+                switch (input.Key)
+                {
+                    case ConsoleKey.Y:
+                        Console.WriteLine();
+                        Console.WriteLine(ex.Message);
+                        Console.WriteLine();
+                        Console.WriteLine(ex.StackTrace);
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to close the program");
+                        Console.ReadKey(true);
+                        Environment.Exit(0);
+                        break;
+                    
+                    default:
+                        Environment.Exit(0);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine();
+                Console.WriteLine("Press any key to close the program");
+                
+                Console.ReadKey(true);
+                Environment.Exit(0);
+            }
+        }
+
+        private static async Task RunProgram()
+        {
             var services = new ServiceCollection();
 
             services.AddDbContext<WebshopDbContext>();
@@ -51,7 +96,7 @@ namespace ClothingWebstore
                 new Window("Role", 0, 0, Menu.ReturnGeneralStartMenuList()).Draw();
                 new Window("Navigation", 40, 0, Menu.ReturnGeneralNavigationList()).Draw();
                 new Window("Terms & Conditions", 0, 6, Menu.ReturnTermsList()).Draw();
-                
+
                 ConsoleKeyInfo role = Console.ReadKey(true);
 
                 switch (role.Key)

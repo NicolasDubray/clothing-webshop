@@ -10,7 +10,7 @@ namespace ClothingWebstore.UIHelper
         public int Left { get; set; } = left;
         public int Top { get; set; } = top;
         public List<string> TextRows { get; set; } = textRows;
-
+        
         public void Draw()
         {
             var width = TextRows.OrderByDescending(s => s.Length).FirstOrDefault()!.Length;

@@ -785,6 +785,13 @@ public class AdminProgram
                 if (product is null)
                     continue;
 
+                if (product.OnSale)
+                {
+                    Message.PrintMessage("You can't remove a product that is on sale.");
+                    continue;
+                }
+
+
                 Console.WriteLine($"Are you sure you want to delete: {product!.Name}?");
                 Console.WriteLine("Press Y/y + enter");
                 string? sure = Console.ReadLine();
