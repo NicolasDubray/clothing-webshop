@@ -1,25 +1,25 @@
-using ClothingWebstore.UIHelper;
-using EFCore;
-using Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Tokens;
+
+using ClothingWebstore.UIHelper;
+
+using EFCore;
+
+using Entities;
+
 using Services.Interfaces;
-using System.ComponentModel.DataAnnotations;
-using System.Reflection.Metadata.Ecma335;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace ClothingWebstore
 {
     public class CustomerProgram
     {
-        private static List<Product> cart = new List<Product>();
         private static IServiceProvider? CustomerProvider;
+
+        private static readonly CheckoutSession _checkoutSession = new();
 
         private static List<string>? _cachedWeather;
         private static DateTime _lastFetch = DateTime.MinValue;
+
         public static async Task RunCustomer(IServiceProvider provider)
         {
             CustomerProvider = provider;
@@ -125,13 +125,26 @@ namespace ClothingWebstore
                     for (int i = 0; i < rowProducts.Count; i++)
                     {
                         var product = rowProducts[i];
+                        bool isSelected = globalIndex == selectedProductIndex;
                         var rows = new List<string>
                         {
-
-                            $"{(globalIndex == selectedProductIndex ? "> " : "  ")}{product.Name}",
+                            FormatProductName(product, isSelected),
                             $"Price: {product.Price} $",
                             $"Description:"
                         };
+
+                        string FormatProductName(Product product, bool isSelected)
+                        {
+
+                            string name = product.Name;
+                            if (isSelected)
+                            {
+                                return $"> {product.Name}";
+
+                            }
+
+                            return $"{product.Name}";
+                        }
 
                         rows.AddRange(WrapTextLimited(product.ShortDescription, boxWidth - 5, 4));
 
@@ -149,10 +162,8 @@ namespace ClothingWebstore
                     currentTop += maxBoxHeight + spacingY;
                 }
 
-
                 ConsoleKeyInfo keyInfo = Console.ReadKey(true);
                 key = keyInfo.Key;
-
 
                 switch (key)
                 {
@@ -224,14 +235,14 @@ namespace ClothingWebstore
 
                         if (addtoCartMode)
                         {
-                            cart.Add(selectedProduct);
+                            _checkoutSession.Cart.AddItem(selectedProduct.Id);
 
                             Console.WriteLine($"{selectedProduct.Name} added to cart!");
                             Console.ReadKey(true);
                         }
                         else
                         {
-                            ShowProductDetails(selectedProduct, cart);
+                            ShowProductDetails(selectedProduct);
                         }
                         break;
                 }
@@ -243,7 +254,7 @@ namespace ClothingWebstore
             Console.WriteLine("V  = Add to cart | B = Exit");
         }
 
-        private static void ShowProductDetails(Product product, List<Product> cart)
+        private static void ShowProductDetails(Product product)
         {
             ConsoleKey key;
 
@@ -261,7 +272,7 @@ namespace ClothingWebstore
                 switch (key)
                 {
                     case ConsoleKey.V:
-                        cart.Add(product);
+                        _checkoutSession.Cart.AddItem(product.Id);
 
                         Console.Clear();
                         Console.WriteLine($"{product.Name} added to cart!");
@@ -274,7 +285,7 @@ namespace ClothingWebstore
 
 
 
-        private static List<string> WrapTextLimited(string text, int maxWidth, int maxLines)
+        private static List<string> WrapTextLimited(string text, int maxWidth, int maxLines = 1)
         {
             var lines = new List<string>();
             var words = text.Split(' ');
@@ -325,7 +336,601 @@ namespace ClothingWebstore
 
         private static async Task ViewCart()
         {
+            const int ListNumberColumnWidth = 4;
+            const int NameColumnWidth = 32;
+            const int QuantityColumnWidth = 8;
+            const int PriceColumnWidth = 16;
+            const int LineTotalColumnWidth = 16;
 
+            const int TableWidth =
+                ListNumberColumnWidth +
+                NameColumnWidth +
+                QuantityColumnWidth +
+                PriceColumnWidth +
+                LineTotalColumnWidth;
+
+            const int TotalQuantityWidth =
+                ListNumberColumnWidth +
+                NameColumnWidth +
+                QuantityColumnWidth;
+
+            const int TotalTotalWidth =
+                PriceColumnWidth +
+                LineTotalColumnWidth;
+
+            while (true)
+            {
+                var windowTextRows = new List<string>();
+
+                windowTextRows.Add($"{"",TableWidth}");
+                windowTextRows.Add(
+                    $"{"", -ListNumberColumnWidth}" +
+                    $"{"Product", -NameColumnWidth}" +
+                    $"{"Quantity", QuantityColumnWidth}" +
+                    $"{"Price", PriceColumnWidth}" +
+                    $"{"Total", LineTotalColumnWidth}"
+                );
+                windowTextRows.Add($"{new string('\u2500', TableWidth)}");
+
+                var cartLineItems = new List<string>();
+                int cartLineItemNumber = 1;
+                using var scope = CustomerProvider.CreateScope();
+                var productService = scope.ServiceProvider.GetRequiredService<IProductService>();
+
+                int totalQuantity = 0;
+                double totalTotal = 0;
+
+                foreach (var cartLineItem in _checkoutSession.Cart.Items)
+                {
+                    Product product = await productService.GetByIdAsync(cartLineItem.ProductId);
+                    if (product != null)
+                    {
+                        string lineNumber = WrapTextLimited(cartLineItemNumber.ToString(), ListNumberColumnWidth)[0];
+                        string lineProductName = WrapTextLimited(product.Name, NameColumnWidth)[0];
+                        string lineQuantity = WrapTextLimited(cartLineItem.Quantity.ToString(), QuantityColumnWidth)[0];
+                        totalQuantity += cartLineItem.Quantity;
+                        string linePrice = WrapTextLimited(product.Price.ToString(), PriceColumnWidth)[0];
+                        double total = product.Price * cartLineItem.Quantity;
+                        string lineTotal = WrapTextLimited((product.Price * cartLineItem.Quantity).ToString(), LineTotalColumnWidth)[0];
+                        totalTotal += total;
+
+                        windowTextRows.Add(
+                            $"{lineNumber, -ListNumberColumnWidth}" +
+                            $"{lineProductName, -NameColumnWidth}" +
+                            $"{lineQuantity, QuantityColumnWidth}" +
+                            $"{linePrice, PriceColumnWidth}" +
+                            $"{lineTotal, LineTotalColumnWidth}"
+                        );
+
+                        ++cartLineItemNumber;
+                    }
+                }
+
+                windowTextRows.Add(
+                    $"{"", -ListNumberColumnWidth}" +
+                    $"{"", -NameColumnWidth}" +
+                    $"{new string('\u2500', QuantityColumnWidth / 2),QuantityColumnWidth}" +
+                    $"{"", PriceColumnWidth}" +
+                    $"{new string('\u2500', LineTotalColumnWidth / 2),LineTotalColumnWidth}"
+                );
+
+                windowTextRows.Add(
+                    $"{totalQuantity, TotalQuantityWidth}" +
+                    $"{totalTotal, TotalTotalWidth}"
+                );
+
+                Console.Clear();
+                Window window = new Window("Cart", 0, 0, windowTextRows);
+                window.Draw();
+                Console.WriteLine();
+                Console.WriteLine("[1] Continue to checkout");
+                Console.WriteLine("[2] Edit item quantity");
+                Console.WriteLine();
+                Console.WriteLine("[b] Back");
+                Console.WriteLine();
+                Console.Write("Enter choice: ");
+
+                string? choice = Console.ReadLine();
+                switch (choice)
+                {
+                    case "1":
+                        await HandleCheckoutStepFlow();
+                        continue;
+
+                    case "2":
+                        ShowCartItemEditMenu();
+                        continue;
+
+                    case "b":
+                    case "B":
+                        return;
+
+                    default:
+                        Message.PrintInvalidInput();
+                        continue;
+                }
+            }
+        }
+
+        private static void ShowCartItemEditMenu()
+        {
+            while (true)
+            {
+                Console.Write($"Specify item using list numbers (1-{_checkoutSession.Cart.Items.Count}): ");
+
+                string? input = Console.ReadLine();
+
+                int lineNumber;
+                if (!int.TryParse(input, out lineNumber))
+                {
+                    Message.PrintInvalidInput();
+                    continue;
+                }
+
+                if (lineNumber < 1 || lineNumber > _checkoutSession.Cart.Items.Count)
+                {
+                    Message.PrintInvalidInput();
+                    continue;
+                }
+
+                Console.Write($"Set new quantity: ");
+                input = Console.ReadLine();
+
+                int quantity;
+                if (!int.TryParse(input, out quantity) || quantity < 0)
+                {
+                    Message.PrintInvalidInput();
+                    continue;
+                }
+
+                if (quantity == 0)
+                    _checkoutSession.Cart.RemoveItemByIndex(lineNumber - 1);
+                else
+                    _checkoutSession.Cart.Items[lineNumber - 1].Quantity = quantity;
+
+                break;
+            }
+        }
+
+        private static async Task HandleCheckoutStepFlow()
+        {
+            var currentStep = CheckoutStep.Identification;
+
+            while (true)
+            {
+                switch (currentStep)
+                {
+                    case CheckoutStep.Identification:
+                    {
+                        var result = await ShowCustomerIdentificationMenu();
+
+                        switch (result)
+                        {
+                            case NavigationAction.Back:
+                                return;
+
+                            case NavigationAction.Next:
+                                currentStep = CheckoutStep.Shipping;
+                                break;
+                        }
+
+                        break;
+                    }
+                    case CheckoutStep.Shipping:
+                    {
+                        var result = await ShowShippingOptionsMenu();
+
+                        switch (result)
+                        {
+                            case NavigationAction.Back:
+                                currentStep = CheckoutStep.Identification;
+                                break;
+
+                            case NavigationAction.Next:
+                                currentStep = CheckoutStep.Payment;
+                                break;
+                        }
+
+                        break;
+                    }
+                    case CheckoutStep.Payment:
+                    {
+                        var result = await ShowPaymentOptionsMenu();
+
+                        switch (result)
+                        {
+                            case NavigationAction.Back:
+                                currentStep = CheckoutStep.Shipping;
+                                break;
+
+                            case NavigationAction.Next:
+                                currentStep = CheckoutStep.Order;
+                                break;
+                        }
+
+                        break;
+                    }
+                    case CheckoutStep.Order:
+                    {
+                        await PlaceOrder();
+
+                        return;
+                    }
+                }
+            }
+        }
+
+        private static async Task<NavigationAction> ShowCustomerIdentificationMenu()
+        {
+            while (true)
+            {
+                Console.Clear();
+                Console.WriteLine("[1] Log in");
+                Console.WriteLine("[2] Register account to continue checkout process");
+                Console.WriteLine("[b] Back");
+                Console.Write("Enter choice: ");
+                string? choice = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(choice))
+                {
+                    Message.PrintInvalidInput();
+                    continue;
+                }
+
+                switch (choice)
+                {
+                    case "1":
+                        bool loggedIn = await HandleLogin();
+
+                        if (!loggedIn)
+                            continue;
+
+                        ShowCustomerAddress(_checkoutSession.Customer!);
+
+                        Console.WriteLine();
+                        Message.PressAnyKeyToContinue();
+
+                        return NavigationAction.Next;
+
+                    case "2":
+                        EnterNewCustomerInfo();
+                        return NavigationAction.Next;
+
+                    case "b":
+                    case "B":
+                        return NavigationAction.Back;
+
+                    default:
+                        Message.PrintInvalidInput();
+                        break;
+                }
+            }
+        }
+
+        private static async Task<bool> HandleLogin()
+        {
+            using var scope = CustomerProvider.CreateScope();
+            var customerService = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+
+            while (true)
+            {
+                Console.Clear();
+                Console.Write("Enter customer ID or [b] for back: ");
+                string? input = Console.ReadLine();
+
+                if (string.IsNullOrWhiteSpace(input))
+                {
+                    Message.PrintInvalidInput();
+                    continue;
+                }
+
+                if (input.Equals("b", StringComparison.OrdinalIgnoreCase))
+                    return false;
+
+                if (!int.TryParse(input, out int customerId))
+                {
+                    Message.PrintInvalidInput();
+                    continue;
+                }
+
+                var customer = await customerService.GetWithAddressesAsync(customerId);
+                if (customer == null)
+                {
+                    Console.WriteLine("No customer with that ID exists.");
+                    continue;
+                }
+
+                _checkoutSession.Customer = customer;
+                var defaultAddress = customer.Addresses.FirstOrDefault();
+                if (defaultAddress != null)
+                {
+                    _checkoutSession.Address = new ShippingAddress
+                    {
+                        Street = defaultAddress.Address.StreetAddress,
+                        City = defaultAddress.Address.City,
+                        Country = defaultAddress.Address.Country
+                    };
+                }
+
+                return true;
+            }
+        }
+
+        private static NavigationAction EnterNewCustomerInfo()
+        {
+            string name = "";
+            string birthDate = "";
+            string email = "";
+            string phone = "";
+            string street = "";
+            string city = "";
+            string country = "";
+
+            var registrationFormFields = new List<(string FieldLabel, Func<string, bool> FieldInputValidation, Action<string> SetFieldValue)>
+            {
+                ("Name",        ValidateInput.IsValidName,      value => name = value),
+                ("Birth date",  ValidateInput.IsValidBirthDate, value => birthDate = value),
+                ("Email",       ValidateInput.IsValidEmail,     value => email = value),
+                ("Phone",       ValidateInput.IsValidPhone,     value => phone = value),
+                ("Street",      ValidateInput.IsValidAddress,   value => street = value),
+                ("City",        ValidateInput.IsValidName,      value => city = value),
+                ("Country",     ValidateInput.IsValidName,      value => country = value)
+            };
+
+            int index = 0;
+            while (index < registrationFormFields.Count)
+            {
+                var registrationFormFieldRows = new List<string>
+                {
+                    $"Name:       {(string.IsNullOrWhiteSpace(name)         ? "_" : name)}",
+                    $"Birth date: {(string.IsNullOrWhiteSpace(birthDate)    ? "_" : birthDate)}",
+                    $"Email:      {(string.IsNullOrWhiteSpace(email)        ? "_" : email)}",
+                    $"Phone:      {(string.IsNullOrWhiteSpace(phone)        ? "_" : phone)}",
+                    $"Street:     {(string.IsNullOrWhiteSpace(street)       ? "_" : street)}",
+                    $"City:       {(string.IsNullOrWhiteSpace(city)         ? "_" : city)}",
+                    $"Country:    {(string.IsNullOrWhiteSpace(country)      ? "_" : country)}"
+                };
+                Console.Clear();
+                new Window("Register Account", 0, 0, registrationFormFieldRows).Draw();
+
+                var field = registrationFormFields[index];
+                string input = GetValidatedInput(field.FieldLabel, field.FieldInputValidation);
+                field.SetFieldValue(input);
+                ++index;
+            }
+
+            var customer = new Customer
+            {
+                Name = name,
+                BirthDate = DateTime.Parse(birthDate),
+                Email = email,
+                Phone = phone,
+                Addresses = new List<AddressCustomer>
+                {
+                    new AddressCustomer
+                    {
+                        Address = new Address
+                        {
+                            StreetAddress = street,
+                            City = city,
+                            Country = country
+                        }
+                    }
+                }
+            };
+
+            _checkoutSession.Customer = customer;
+
+            return NavigationAction.Next;
+        }
+
+        private static void ShowCustomerAddress(Customer customer)
+        {
+            var address = customer.Addresses?.FirstOrDefault()?.Address;
+            var rows = new List<string>
+            {
+                $"Name:     {customer.Name          ?? "N/A"}",
+                $"Street:   {address?.StreetAddress ?? "N/A"}",
+                $"City:     {address?.City          ?? "N/A"}",
+                $"Country:  {address?.Country       ?? "N/A"}"
+            };
+
+            Console.Clear();
+            new Window("Shipping", 0, 0, rows).Draw();
+        }
+
+        private static async Task<NavigationAction> ShowShippingOptionsMenu()
+        {
+            const int ListNumberColumnWidth = 4;
+            const int NameColumnWidth = 32;
+            const int PriceColumnWidth = 16;
+            const int DeliveryTimeColumnWidth = 24;
+            const int TableWidth =
+                ListNumberColumnWidth +
+                NameColumnWidth +
+                PriceColumnWidth +
+                DeliveryTimeColumnWidth;
+
+            var windowTextRows = new List<string>();
+
+            windowTextRows.Add($"{"", TableWidth}");
+            windowTextRows.Add(
+                $"{"", -ListNumberColumnWidth}" +
+                $"{"Name", -NameColumnWidth}" +
+                $"{"Price", PriceColumnWidth}" +
+                $"{"Delivery time", DeliveryTimeColumnWidth}"
+            );
+            windowTextRows.Add(new string('\u2500', TableWidth));
+
+            using var scope = CustomerProvider.CreateScope();
+            var shippingService = scope.ServiceProvider.GetRequiredService<IShippingService>();
+
+            var shippingOptions = await shippingService.GetAllAsync();
+
+            int shippingOptionNumber = 1;
+
+            foreach (var option in shippingOptions)
+            {
+                string name = WrapTextLimited(option.Name, NameColumnWidth)[0];
+                string price = WrapTextLimited(option.Price.ToString(), PriceColumnWidth)[0];
+
+                windowTextRows.Add(
+                    $"{shippingOptionNumber, -ListNumberColumnWidth}" +
+                    $"{name, -NameColumnWidth}" +
+                    $"{price, PriceColumnWidth}"
+                );
+
+                ++shippingOptionNumber;
+            }
+
+            Console.Clear();
+
+            new Window("Shipping Options", 0, 0, windowTextRows).Draw();
+
+            while (true)
+            {
+                Console.WriteLine();
+                Console.WriteLine($"Enter number (1-{shippingOptions.Count}) to select shipping method");
+                Console.WriteLine();
+                Console.WriteLine("[b] Back");
+                Console.WriteLine();
+                Console.Write("Enter choice: ");
+
+                string? choice = Console.ReadLine();
+                switch (choice)
+                {
+                    case "b":
+                    case "B":
+                        return NavigationAction.Back;
+                }
+
+                if (int.TryParse(choice, out int index))
+                {
+                    if (index >= 1 && index <= shippingOptions.Count)
+                    {
+                        _checkoutSession.Shipping = shippingOptions[index - 1];
+                        return NavigationAction.Next;
+                    }
+                }
+
+                Message.PrintInvalidInput();
+            }
+        }
+
+        private static async Task<NavigationAction> ShowPaymentOptionsMenu()
+        {
+            const int ListNumberColumnWidth = 4;
+            const int IdColumnWidth = 32;
+            const int TableWidth =
+                ListNumberColumnWidth +
+                IdColumnWidth;
+
+            var windowTextRows = new List<string>();
+
+            windowTextRows.Add($"{"",TableWidth}");
+            windowTextRows.Add(
+                $"{"",-ListNumberColumnWidth}" +
+                $"{"Name",-IdColumnWidth}"
+            );
+            windowTextRows.Add(new string('\u2500', TableWidth));
+
+            using var scope = CustomerProvider.CreateScope();
+            var paymentService = scope.ServiceProvider.GetRequiredService<IPaymentService>();
+
+            var paymentOptions = await paymentService.GetAllAsync();
+
+            int paymentOptionNumber = 1;
+
+            foreach (var option in paymentOptions)
+            {
+                string id = WrapTextLimited(option.Id.ToString(), IdColumnWidth)[0];
+
+                windowTextRows.Add(
+                    $"{paymentOptionNumber,-ListNumberColumnWidth}" +
+                    $"{option.Type,-IdColumnWidth}"
+                );
+
+                ++paymentOptionNumber;
+            }
+
+            Console.Clear();
+            new Window("Payment Options", 0, 0, windowTextRows).Draw();
+
+            while (true)
+            {
+                Console.WriteLine();
+                Console.WriteLine($"Enter number (1-{paymentOptions.Count}) to select payment option");
+                Console.WriteLine();
+                Console.WriteLine("[b] Back");
+                Console.WriteLine();
+                Console.Write("Enter choice: ");
+
+                string? choice = Console.ReadLine();
+                switch (choice)
+                {
+                    case "b":
+                    case "B":
+                        return NavigationAction.Back;
+                }
+
+                if (int.TryParse(choice, out int index))
+                {
+                    if (index >= 1 && index <= paymentOptions.Count)
+                    {
+                        _checkoutSession.Payment = paymentOptions[index - 1];
+                        return NavigationAction.Next;
+                    }
+                }
+
+                Message.PrintInvalidInput();
+            }
+        }
+
+        private static async Task PlaceOrder()
+        {
+            using var scope = CustomerProvider.CreateScope();
+            var customerService = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+
+            if (_checkoutSession.Customer!.Id == 0)
+                await customerService.AddAsync(_checkoutSession.Customer);
+
+            var order = new Order
+            {
+                CustomerId = _checkoutSession.Customer.Id,
+                ShippingId = _checkoutSession.Shipping!.Id,
+                PaymentId = _checkoutSession.Payment!.Id
+            };
+
+            foreach (var cartLineItem in _checkoutSession.Cart.Items)
+            {
+                var orderProduct = new OrderProduct()
+                {
+                    ProductId = cartLineItem.ProductId,
+                    ProductAmount = cartLineItem.Quantity
+                };
+
+                order.OrderProducts.Add(orderProduct);
+            }
+
+            order.OrderNumber = "0000000000";
+
+            var orderService = scope.ServiceProvider.GetRequiredService<IOrderService>();
+            await orderService.AddAsync(order);
+
+            _checkoutSession.Cart.EmptyOut();
+        }
+
+        private static string GetValidatedInput(string property, Func<string, bool> validate)
+        {
+            while (true)
+            {
+                Console.Write($"{property}: ");
+                string? input = Console.ReadLine();
+
+                if (validate(input!))
+                    return input!;
+
+                Message.PrintInvalidInput();
+            }
         }
 
         private static async Task DisplayProductDeals()

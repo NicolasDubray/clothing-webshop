@@ -47,6 +47,7 @@ namespace ClothingWebstore
             while (true)
             {
                 Console.Clear();
+
                 new Window("Role", 0, 0, Menu.ReturnGeneralStartMenuList()).Draw();
                 new Window("Navigation", 40, 0, Menu.ReturnGeneralNavigationList()).Draw();
                 new Window("Terms & Conditions", 0, 6, Menu.ReturnTermsList()).Draw();
