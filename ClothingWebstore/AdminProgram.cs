@@ -22,6 +22,8 @@ public class AdminProgram
             Console.Clear();
             new Window("Choice", 0, 0, Menu.ReturnAdminStartList()).Draw();
             new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
+
+            Console.SetCursorPosition(0, 9);
             string? choice = Console.ReadLine();
 
             switch (choice)
@@ -70,7 +72,8 @@ public class AdminProgram
             Console.Clear();
             new Window("Choice", 0, 0, Menu.ReturnManageProductList()).Draw();
             new Window("Choice", 25, 0, Menu.ReturnInstructionList()).Draw();
-            Console.WriteLine();
+
+            Console.SetCursorPosition(0, 12);
 
             string? input = Console.ReadLine();
 
@@ -110,6 +113,8 @@ public class AdminProgram
             new Window("Choice", 0, 0, Menu.ReturnManageCategoriesList()).Draw();
             new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
 
+            Console.SetCursorPosition(0, 7);
+
             string? input = Console.ReadLine();
 
             Console.Clear();
@@ -145,6 +150,8 @@ public class AdminProgram
         var categoryList = categories.Select(c => $"{c.Id} - {c.Name}").ToList();
 
         new Window("Categories", 0, 0, categoryList).Draw();
+
+        Console.SetCursorPosition(0, 6);
         Message.PressAnyKeyToContinue();
     }
 
@@ -154,12 +161,13 @@ public class AdminProgram
         {
             Console.Clear();
             new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("What category would you like to delete?")).Draw();
-            new Window("Navigation", 50, 0, Menu.ReturnInstructionList()).Draw();
+            new Window("Navigation", 45, 0, Menu.ReturnInstructionList()).Draw();
 
             var categories = await serviceCategory.GetAllAsync();
             var rows = categories.Select(c => $"[{c.Id}] {c.Name}").ToList();
             new Window("All categories", 0, 3, rows).Draw();
 
+            Console.SetCursorPosition(0, 10);
             string? input = Console.ReadLine();
 
             if (input!.Equals("B", StringComparison.OrdinalIgnoreCase))
@@ -185,8 +193,10 @@ public class AdminProgram
                 {
                     Console.Clear();
                     List<string> confirmeRows = [$"Are you sure you want to delete: {category.Name}", "Press Y/y + enter for yes"];
+
                     new Window("Confirm", 0, 0, confirmeRows).Draw();
 
+                    Console.SetCursorPosition(0, 6);
                     string? approved = Console.ReadLine();
                     if (approved?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true)
                     {
@@ -200,6 +210,7 @@ public class AdminProgram
                     }
                 }
             }
+            Message.PrintInvalidInput();
         }
     }
 
@@ -210,6 +221,8 @@ public class AdminProgram
             Console.Clear();
             List<string> rows = ["Enter the name for new category.", "[B] Back"];
             new Window("Choice", 0, 0, rows).Draw();
+
+            Console.SetCursorPosition(0, 5);
             Console.Write("Category name: ");
 
             string? input = Console.ReadLine();
@@ -235,6 +248,7 @@ public class AdminProgram
             new Window("Choice", 0, 0, Menu.ReturnManageCustomerList()).Draw();
             new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
 
+            Console.SetCursorPosition(0, 8);
             string? input = Console.ReadLine();
 
             switch (input)
@@ -248,12 +262,13 @@ public class AdminProgram
                     break;
 
                 case "3":
-                    await DeleteCustomer();
+                    await RemoveCustomer();
                     break;
 
                 case "4":
                     Console.Clear();
                     await ListAllCustomersNames();
+                    Console.SetCursorPosition(0, 9);
                     Message.PressAnyKeyToContinue();
                     break;
 
@@ -449,7 +464,7 @@ public class AdminProgram
 
                 foreach (var op in order.OrderProducts)
                 {
-                    rows.Add($"  {op.Product.Name} x{op.ProductAmount} - {op.Product.Price:C}");
+                    rows.Add($"  {op.Product.Name} x{op.ProductAmount} - {op.Product.Price}$");
                 }
                 rows.Add("");
             }
@@ -511,7 +526,7 @@ public class AdminProgram
         }
     }
 
-    private static async Task DeleteCustomer()
+    private static async Task RemoveCustomer()
     {
         while (true)
         {
@@ -562,6 +577,7 @@ public class AdminProgram
             new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("What would you like to change")).Draw();
             new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
 
+            Console.SetCursorPosition(0, 4);
             var products = await ListAllProducts();
 
             string? choice = Console.ReadLine();
@@ -693,6 +709,7 @@ public class AdminProgram
 
         while (true)
         {
+            Console.WriteLine();
             Console.Write("Enter ID: ");
             var input = Console.ReadLine();
 
@@ -704,7 +721,7 @@ public class AdminProgram
                 break;
             }
 
-            Console.WriteLine("Invalid choice...");
+            Message.PrintInvalidInput();
         }
     }
 
@@ -752,6 +769,8 @@ public class AdminProgram
             new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("What would you like to delete?")).Draw();
             new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
 
+            Console.SetCursorPosition(0, 5);
+
             var products = await ListAllProducts();
             Console.WriteLine();
 
@@ -760,12 +779,12 @@ public class AdminProgram
             if (input!.Equals("B", StringComparison.OrdinalIgnoreCase))
                 return;
 
-            int id = int.Parse(input);
-
-            var product = products.FirstOrDefault(p => p.Id == id);
-
-            if (ValidateInput.IsValidProId(input, products) && products != null)
+            if (ValidateInput.IsValidProId(input, products) && int.TryParse(input, out int id))
             {
+                var product = products.FirstOrDefault(p => p.Id == id);
+                if (product is null)
+                    continue;
+
                 Console.WriteLine($"Are you sure you want to delete: {product!.Name}?");
                 Console.WriteLine("Press Y/y + enter");
                 string? sure = Console.ReadLine();
@@ -776,6 +795,7 @@ public class AdminProgram
                 }
                 else
                 {
+                    Message.PrintMessage("Product was not removed, returning");
                     return;
                 }
             }
@@ -838,6 +858,7 @@ public class AdminProgram
                 Console.WriteLine($"[{item.Id}] - {item.Name}");
             }
 
+            Console.WriteLine();
             Console.Write("Enter ID: ");
             var input = Console.ReadLine();
 
@@ -846,8 +867,7 @@ public class AdminProgram
                 return id;
             }
 
-            Console.WriteLine("Invalid Choice");
-            Console.ReadLine();
+            Message.PrintInvalidInput();
         }
     }
 
@@ -871,7 +891,7 @@ public class AdminProgram
         Console.Clear();
         var products = await service.GetAllAsync();
 
-        var productList = products.Select(p => $"[{p.Id}] - {p.Name} - {p.Price}Kr ______ {p.ShortDescription}").ToList();
+        var productList = products.Select(p => $"[{p.Id}] - {p.Name} - {p.Price}$ ______ {p.ShortDescription}").ToList();
 
         new Window("Products", 0, 0, productList).Draw();
     }
@@ -879,79 +899,54 @@ public class AdminProgram
               
     private static async Task SeeStatistics()
     {
-            while (true)
-            {
-                Console.Clear();
-                new Window("Statistics", 0, 0, Menu.ReturnSimpleTextList("All statistics for shop")).Draw();
-                new Window("Navigation", 60, 0, Menu.ReturnInstructionStatisticsList()).Draw();
+        using var scope = _provider!.CreateScope();
+        var productService = scope.ServiceProvider.GetRequiredService<IProductService>();
+        var customerService = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+        var categoryService = scope.ServiceProvider.GetRequiredService<ICategoryService>();
 
-                ConsoleKeyInfo key = Console.ReadKey(true);
+        Console.Clear();
+        new Window("Statistics", 0, 0, Menu.ReturnSimpleTextList("All statistics for shop")).Draw();
 
-                switch (key.Key)
-                {
-                    case ConsoleKey.B:
-                        return;
-                    case ConsoleKey.D1:
-                        await PrintBestSellingProducts();
-                        break;
-                    case ConsoleKey.D2:
-                        await PrintTotalRevenue();
-                        break;
-                    case ConsoleKey.D3:
-                        await PrintTopBuyingCustomers();
-                        break;
-                    case ConsoleKey.D4:
-                        await PrintBestSellingCategories();
-                        break;
-                    default:
-                        Message.PrintInvalidInput();
-                        break;
-                }
-            }
-      }
+        await PrintBestSellingProducts(productService);
+        await PrintTotalRevenue(productService);
+        await PrintTopBuyingCustomers(customerService);
+        await PrintBestSellingCategories(categoryService);
 
-    private static async Task PrintBestSellingProducts()
+        Console.SetCursorPosition(0, 3);
+        Message.PressAnyKeyToContinue();
+    }
+
+    private static async Task PrintBestSellingProducts(IProductService service)
     {
         int amount = 3;
-        using var scope = _provider!.CreateScope();
-        var service = scope.ServiceProvider.GetRequiredService<IProductService>();
         var topProducts = await service.GetBestSellingProductsAsync(amount);
 
-        var rows = topProducts.Select(p => $"{p.Name} - {p.Price:C} ({p.Brand.Name})").ToList();
-        new Window("Best Selling Products", 0, 5, rows).Draw();
-        Message.PressAnyKeyToContinue();
+        var rows = topProducts.Select(p => $"{p.Name} - {p.Price}$ ({p.Brand.Name})").ToList();
+        new Window("Best Selling Products", 30, 0, rows).Draw();
+        
     }
 
-    private static async Task PrintTotalRevenue()
+    private static async Task PrintTotalRevenue(IProductService service)
     {
-        using var scope = _provider!.CreateScope();
-        var service = scope.ServiceProvider.GetRequiredService<IProductService>();
         var total = await service.GetTotalRevenueAsync();
 
-        new Window("Total revenue", 0, 5, Menu.ReturnSimpleTextList($"{total}$")).Draw();
-        Message.PressAnyKeyToContinue();
+        new Window("Total revenue", 30, 18, Menu.ReturnSimpleTextList($"{total}$")).Draw();
     }
 
-    private static async Task PrintTopBuyingCustomers()
+    private static async Task PrintTopBuyingCustomers(ICustomerService service)
     {
-        using var scope = _provider!.CreateScope();
-        var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
         var topBuyingCustomers = await service.GetTopBuyingCustomersAsync(3);
 
         var rows = topBuyingCustomers.Select(c => c.Name).ToList();
-        new Window("Top buying customers", 0, 5, rows).Draw();
-        Message.PressAnyKeyToContinue();
+        new Window("Top buying customers", 30, 6, rows).Draw();
     }
 
-    private static async Task PrintBestSellingCategories()
+    private static async Task PrintBestSellingCategories(ICategoryService service)
     {
-        using var scope = _provider!.CreateScope();
-        var service = scope.ServiceProvider.GetRequiredService<ICategoryService>();
         var categories = await service.GetBestSellingCategoriesAsync(3);
 
         var rows = categories.Select(c => c.Name).ToList();
-        new Window("Top Categories", 0, 5, rows).Draw();
-        Message.PressAnyKeyToContinue();
+        new Window("Top Categories", 30, 12, rows).Draw();
     }
 
     private static async Task ManageProductDeals()
@@ -975,9 +970,10 @@ public class AdminProgram
             new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("Choose a product to remove deal")).Draw();
             new Window("Navigation", 50, 0, Menu.ReturnInstructionList()).Draw();
 
-            var rows = productsWithDeals.Select(p => $"[{p.Id}] {p.Name} - Price: {p.Price}").ToList();
+            var rows = productsWithDeals.Select(p => $"[{p.Id}] {p.Name} - Price: {p.Price}$").ToList();
             new Window("Product deals", 0, 5, rows).Draw();
 
+            Console.SetCursorPosition(0, 11);
             string? input = Console.ReadLine();
 
             if (input!.Equals("B", StringComparison.OrdinalIgnoreCase))
@@ -1014,7 +1010,7 @@ public class AdminProgram
             new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("Choose a product to add deal")).Draw();
             new Window("Navigation", 50, 0, Menu.ReturnSimpleTextList("Press key + enter")).Draw();
 
-            var rows = productsWithoutDeals.Select(p => $"[{p.Id}] {p.Name} - Price: {p.Price}").ToList();
+            var rows = productsWithoutDeals.Select(p => $"[{p.Id}] {p.Name} - Price: {p.Price}$").ToList();
             new Window("Products", 0, 5, rows).Draw();
 
             string? input = Console.ReadLine();

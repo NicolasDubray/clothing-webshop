@@ -13,7 +13,7 @@ namespace ClothingWebstore
 {
     public class CustomerProgram
     {
-        private static IServiceProvider CustomerProvider;
+        private static IServiceProvider? CustomerProvider;
 
         private static readonly CheckoutSession _checkoutSession = new();
 
@@ -41,13 +41,14 @@ namespace ClothingWebstore
                     case "1":
                         await GoToProductPage();
                         break;
+                        
                     case "2":
                         await ViewCart();
                         break;
+
                     case "b":
                     case "B":
-                        await GoBack();
-                        break;
+                        return;
 
                     default:
                         Message.PrintInvalidInput();
@@ -58,7 +59,7 @@ namespace ClothingWebstore
 
         private static async Task GoToProductPage()
         {
-            using var scope = CustomerProvider.CreateScope();
+            using var scope = CustomerProvider!.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
 
             string currentSearch = "";
@@ -126,13 +127,11 @@ namespace ClothingWebstore
                         var product = rowProducts[i];
                         bool isSelected = globalIndex == selectedProductIndex;
                         var rows = new List<string>
-
-                {
-                        FormatProductName(product, isSelected),
-                        $"Price: {product.Price} $",
-                        $"Description:"
-                };
-
+                        {
+                            FormatProductName(product, isSelected),
+                            $"Price: {product.Price} $",
+                            $"Description:"
+                        };
 
                         string FormatProductName(Product product, bool isSelected)
                         {
@@ -145,22 +144,17 @@ namespace ClothingWebstore
                             }
 
                             return $"{product.Name}";
-
                         }
-
-
 
                         rows.AddRange(WrapTextLimited(product.ShortDescription, boxWidth - 5, 4));
 
                         int boxHeight = rows.Count + 2;
                         int left = startLeft + i * (boxWidth + spacingX);
 
-
                         windows.Add((new Window(product.Id.ToString(), left, currentTop, rows), boxHeight, left));
 
                         globalIndex++;
                     }
-
 
                     foreach (var (window, _, _) in windows)
                         window.Draw();
@@ -168,22 +162,23 @@ namespace ClothingWebstore
                     currentTop += maxBoxHeight + spacingY;
                 }
 
-
                 ConsoleKeyInfo keyInfo = Console.ReadKey(true);
                 key = keyInfo.Key;
-
 
                 switch (key)
                 {
                     case ConsoleKey.RightArrow:
                         if (selectedProductIndex < products.Count - 1) selectedProductIndex++;
                         break;
+
                     case ConsoleKey.LeftArrow:
                         if (selectedProductIndex > 0) selectedProductIndex--;
                         break;
+
                     case ConsoleKey.UpArrow:
                         if (selectedProductIndex - itemsPerRow >= 0) selectedProductIndex -= itemsPerRow;
                         break;
+
                     case ConsoleKey.DownArrow:
                         if (selectedProductIndex + itemsPerRow < products.Count) selectedProductIndex += itemsPerRow;
                         break;
@@ -209,14 +204,11 @@ namespace ClothingWebstore
 
                         rowsOfProducts.Clear();
                         for (int i = 0; i < products.Count; i += itemsPerRow)
-
                         {
                             rowsOfProducts.Add(products.Skip(i).Take(itemsPerRow).ToList());
-
                         }
 
                         selectedProductIndex = 0;
-
 
                         break;
 
@@ -236,22 +228,17 @@ namespace ClothingWebstore
                         break;
 
                     case ConsoleKey.B:
-                        await GoBack();
-                        break;
+                        return;
 
                     case ConsoleKey.Enter:
-
                         var selectedProduct = products[selectedProductIndex];
-
 
                         if (addtoCartMode)
                         {
                             _checkoutSession.Cart.AddItem(selectedProduct.Id);
 
-
                             Console.WriteLine($"{selectedProduct.Name} added to cart!");
                             Console.ReadKey(true);
-
                         }
                         else
                         {
@@ -262,7 +249,6 @@ namespace ClothingWebstore
 
             } while (key != ConsoleKey.B);
 
-
             Console.SetCursorPosition(0, Lowest.LowestPosition + 5);
 
             Console.WriteLine("V  = Add to cart | B = Exit");
@@ -272,10 +258,8 @@ namespace ClothingWebstore
         {
             ConsoleKey key;
 
-
             do
             {
-
                 Console.Clear();
                 Console.WriteLine($"Name: {product.Name}");
                 Console.WriteLine($"Price: {product.Price} $");
@@ -294,11 +278,9 @@ namespace ClothingWebstore
                         Console.WriteLine($"{product.Name} added to cart!");
                         Message.PressAnyKeyToContinue();
                         break;
-
                 }
 
             } while (key != ConsoleKey.B);
-
         }
 
 
@@ -345,7 +327,7 @@ namespace ClothingWebstore
             var data = await WeatherService.GetApiData();
 
             if (data is null)
-                _cachedWeather = ["Wheater is unavailable."];
+                _cachedWeather = ["Weather is unavailable."];
             else
                 _cachedWeather = [$"Temperature today is {Math.Round(data.Main.Temp)}°C", $"and there is {data.Weather[0].MainDescription}."];
             _lastFetch = DateTime.Now;
@@ -951,24 +933,17 @@ namespace ClothingWebstore
             }
         }
 
-        private static async Task GoBack()
-        {
-
-
-
-
-        }
-
         private static async Task DisplayProductDeals()
         {
-            using var scope = CustomerProvider.CreateScope();
+            using var scope = CustomerProvider!.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<IProductService>();
             var productsWithDeals = await service.GetProductsWithDealsAsync();
 
             for (int i = 0; i < productsWithDeals.Count && i < 3; i++)
             {
                 var product = productsWithDeals[i];
-                List<string> productDetails = [$"{product.Name}", $"Price: {product.Price}", "Now on sale!"];
+                List<string> productDetails = [$"{product.Name}", $"Price: {product.Price}$", "Now on sale!"];
+
                 new Window($"Offer {i + 1}", GetLeftPosition(i), 8, productDetails).Draw();
             }
 

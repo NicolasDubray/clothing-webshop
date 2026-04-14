@@ -7,17 +7,6 @@ namespace ClothingWebstore.UIHelper
 {
     internal class Menu
     {
-        public static string ReturnGeneralStartMenu()
-        {
-            return """
-                Are you a customer / admin?
-                [C] Customer
-                [A] Admin
-                [Q] Quit
-
-                """;
-        }
-
         internal static List<string> ReturnGeneralStartMenuList()
         {
             return ["Are you a customer / admin?", "[C] Customer", "[A] Admin"];
@@ -28,37 +17,18 @@ namespace ClothingWebstore.UIHelper
             return ["Press key", "[Q] Quit"];
         }
 
-        public static string ReturnAdminStartMenu()
-        {
-            return """
-                What would you like to manage?
-                Press key + enter.
-                [1] Products
-                [2] Categories
-                [3] Customer
-                [4] Statistics
-
-                [B] Back
-
-                """;
-        }
-
         internal static List<string> ReturnAdminStartList()
         {
             return ["What would you like to manage?", "[1] Products", "[2] Categories", "[3] Customer", "[4] Statistics", "[5] Product deals"];
         }
 
-        public static string ReturnCustomerMenu()
+        public static List<string> ReturnTermsList()
         {
-            return """
-               
-                [1] Go to Products
-                [2] View Cart
-
-                [B] Back
-                """;
-
-
+            return [
+                " ",
+                "  This application is best experienced in fullscreen  ",
+                " "
+                ];
         }
 
         internal static List<string> ReturnCustomerMenuList()
@@ -86,33 +56,9 @@ namespace ClothingWebstore.UIHelper
                 ];
         }
 
-        internal static List<string> ReturnInstructionStatisticsList()
-        {
-            return ["Press key", "[1] Best selling products", "[2] Total revenue", "[3] Top buying customers", "[4] Best selling categories", "[B] Back"];
-        }
-
         internal static List<string> ReturnSimpleTextList(string text)
         {
             return [$"{text}"];
-        }
-
-        internal static string ReturnCustomerDetailsMenu(Customer customer)
-        {
-            var address = customer.Addresses.FirstOrDefault()?.Address;
-            return ($"""
-                    [1] Name: {customer.Name}
-                    [2] Birth date: {customer.BirthDate:yyyy-MM-dd}
-                    [3] Email: {customer.Email}
-                    [4] Phone: {customer.Phone}
-                    [5] Street: {address!.StreetAddress}
-                    [6] City: {address!.City}
-                    [7] Country: {address!.Country}
-
-                    [8] See order history
-
-                    [B] Back
-
-                    """);
         }
 
         internal static List<string> ReturnManageProductList()
@@ -138,7 +84,7 @@ namespace ClothingWebstore.UIHelper
                 | |
                 [2] Brand: {product.Brand.Name}
                 | |
-                [3] Price: {product.Price}
+                [3] Price: {product.Price}$
                 | |
                 [4] Category: {product.Category.Name}
                 | |
@@ -146,7 +92,7 @@ namespace ClothingWebstore.UIHelper
                 | |
                 [6] Long Description: {product.LongDescription}
 
-                [B] Return
+                [B] Back
                 """);
         }           
                     
