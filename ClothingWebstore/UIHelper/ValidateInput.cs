@@ -18,9 +18,10 @@ namespace ClothingWebstore.UIHelper
 
         internal static bool IsValidName(string name) =>
             name.Length > 0 && name.Length < 64
+            && !string.IsNullOrWhiteSpace(name)
             && name.All(c => char.IsLetter(c) || c == ' ');
 
-        internal static bool IsValidAddress(string? input) =>
+        internal static bool IsValidAddress(string input) =>
             !string.IsNullOrWhiteSpace(input) && input.Length >= 3;
 
 
@@ -48,8 +49,9 @@ namespace ClothingWebstore.UIHelper
         internal static bool ProNameIsValid(string name) =>
             name.Length > 0 && name.Length < 64;
 
-        internal static bool ProPriceIsValid(string price) =>
-            price is not null && price.All(char.IsDigit) && double.TryParse(price, out double _);
+        internal static bool ProPriceIsValid(string inputPrice) =>
+            inputPrice is not null && inputPrice.All(char.IsDigit) && double.TryParse(inputPrice, out double price)
+            && price > 0;
 
         internal static bool ProShortDescriptionIsValid(string shortDescr) =>
             shortDescr.Length > 0 && shortDescr.Length < 100

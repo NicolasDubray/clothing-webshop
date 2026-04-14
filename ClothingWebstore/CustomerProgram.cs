@@ -325,7 +325,7 @@ namespace ClothingWebstore
             if (data is null)
                 _cachedWeather = ["Wheater is unavailable."];
             else
-                _cachedWeather = [$"Temperature today is {data.Main.Temp}", $"and there is {data.Weather[0].MainDescription}."];
+                _cachedWeather = [$"Temperature today is {Math.Round(data.Main.Temp)}°C", $"and there is {data.Weather[0].MainDescription}."];
             _lastFetch = DateTime.Now;
             return _cachedWeather;
         }
@@ -350,7 +350,7 @@ namespace ClothingWebstore
             for (int i = 0; i < productsWithDeals.Count && i < 3; i++)
             {
                 var product = productsWithDeals[i];
-                List<string> productDetails = [$"Id: {product.Id}", $"{product.Name}", $"Price: {product.Price}", "Now on sale!"];
+                List<string> productDetails = [$"{product.Name}", $"Price: {product.Price}", "Now on sale!"];
                 new Window($"Offer {i + 1}", GetLeftPosition(i), 8, productDetails).Draw();
             }
 
