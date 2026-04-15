@@ -13,6 +13,8 @@ namespace ClothingWebstore
 
         private static readonly CheckoutSession _checkoutSession = new();
 
+        private static readonly double _vatRate = 0.25;
+
         private static List<string>? _cachedWeather;
         private static DateTime _lastFetch = DateTime.MinValue;
 
@@ -847,41 +849,76 @@ namespace ClothingWebstore
         private static async Task<NavigationAction> ShowPaymentOptionsMenu()
         {
             const int ListNumberColumnWidth = 4;
-            const int IdColumnWidth = 32;
+            const int NameColumnWidth = 32;
+            const int QuantityColumnWidth = 8;
+            const int PriceColumnWidth = 16;
+            const int LineTotalColumnWidth = 16;
             const int TableWidth =
                 ListNumberColumnWidth +
-                IdColumnWidth;
+                NameColumnWidth +
+                QuantityColumnWidth +
+                PriceColumnWidth +
+                LineTotalColumnWidth;
 
-            var windowTextRows = new List<string>();
+            var orderSummaryWindowTextRows = new List<string>();
 
-            windowTextRows.Add($"{"",TableWidth}");
-            windowTextRows.Add(
-                $"{"",-ListNumberColumnWidth}" +
-                $"{"Name",-IdColumnWidth}"
+            orderSummaryWindowTextRows.Add($"{"", TableWidth}");
+            orderSummaryWindowTextRows.Add(
+                $"{"", -ListNumberColumnWidth}" +
+                $"{"Product", -NameColumnWidth}" +
+                $"{"Quantity", QuantityColumnWidth}" +
+                $"{"Price", PriceColumnWidth}" +
+                $"{"Total", LineTotalColumnWidth}"
             );
-            windowTextRows.Add(new string('\u2500', TableWidth));
+            orderSummaryWindowTextRows.Add(new string('\u2500', TableWidth));
 
             using var scope = CustomerProvider!.CreateScope();
+            var productService = scope.ServiceProvider.GetRequiredService<IProductService>();
             var paymentService = scope.ServiceProvider.GetRequiredService<IPaymentService>();
 
-            var paymentOptions = await paymentService.GetAllAsync();
-
-            int paymentOptionNumber = 1;
-
-            foreach (var option in paymentOptions)
+            double subtotal = 0;
+            foreach (var item in _checkoutSession.Cart.Items)
             {
-                string id = WrapTextLimited(option.Id.ToString(), IdColumnWidth)[0];
+                var product = await productService.GetByIdAsync(item.ProductId);
+                if (product == null)
+                    continue;
 
-                windowTextRows.Add(
-                    $"{paymentOptionNumber,-ListNumberColumnWidth}" +
-                    $"{option.Type,-IdColumnWidth}"
+                double lineTotal = product.Price * item.Quantity;
+                subtotal += lineTotal;
+
+                orderSummaryWindowTextRows.Add(
+                    $"{"", -ListNumberColumnWidth}" +
+                    $"{product.Name, -NameColumnWidth}" +
+                    $"{item.Quantity, QuantityColumnWidth}" +
+                    $"{"$" + product.Price, PriceColumnWidth}" +
+                    $"{"$" + lineTotal, LineTotalColumnWidth}"
                 );
-
-                ++paymentOptionNumber;
             }
+            orderSummaryWindowTextRows.Add(new string('\u2500', TableWidth));
+
+            double shippingCost = _checkoutSession.Shipping!.Price;
+            double vat = subtotal * _vatRate;
+            double total = subtotal + vat + shippingCost;
+            orderSummaryWindowTextRows.Add($"{$"Subtotal: ${subtotal}", TableWidth}");
+            orderSummaryWindowTextRows.Add($"{$"Shipping: ${shippingCost}", TableWidth}");
+            orderSummaryWindowTextRows.Add($"{$"VAT ({_vatRate * 100}%): ${vat}", TableWidth}");
+            orderSummaryWindowTextRows.Add($"{$"Total (incl. VAT): ${total}", TableWidth}");
 
             Console.Clear();
-            new Window("Payment Options", 0, 0, windowTextRows).Draw();
+            new Window("Cart", 0, 0, orderSummaryWindowTextRows).Draw();
+
+            var paymentOptions = await paymentService.GetAllAsync();
+            var paymentOptionsWindowTextRows = new List<string>();
+            int paymentOptionNumber = 1;
+            foreach (var option in paymentOptions)
+            {
+                paymentOptionsWindowTextRows.Add($"{paymentOptionNumber, -ListNumberColumnWidth}{option.Type}");
+
+                paymentOptionNumber++;
+            }
+
+            int topOffset = orderSummaryWindowTextRows.Count + 2;
+            new Window("Payment Options", 0, topOffset, paymentOptionsWindowTextRows).Draw();
 
             while (true)
             {
