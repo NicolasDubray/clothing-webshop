@@ -27,7 +27,9 @@ namespace ClothingWebstore
                 Console.WriteLine();
                 Console.WriteLine("Press y for more info about the error");
                 Console.WriteLine();
+
                 ConsoleKeyInfo input = Console.ReadKey(true);
+
                 switch (input.Key)
                 {
                     case ConsoleKey.Y:
@@ -38,6 +40,7 @@ namespace ClothingWebstore
                         Console.WriteLine();
                         Console.WriteLine("Press any key to close the program");
                         Console.ReadKey(true);
+
                         Environment.Exit(0);
                         break;
                     

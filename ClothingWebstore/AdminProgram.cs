@@ -17,6 +17,7 @@ public class AdminProgram
     public static async Task RunAdmin(IServiceProvider provider)
     {
         _provider = provider;
+
         while (true)
         {
             Console.Clear();
@@ -74,7 +75,6 @@ public class AdminProgram
             new Window("Choice", 25, 0, Menu.ReturnInstructionList()).Draw();
 
             Console.SetCursorPosition(0, 12);
-
             string? input = Console.ReadLine();
 
             switch (input)
@@ -107,6 +107,7 @@ public class AdminProgram
         using var scope = _provider!.CreateScope();
         var serviceCategory = scope.ServiceProvider.GetRequiredService<ICategoryService>();
         var serviceProduct = scope.ServiceProvider.GetRequiredService<IProductService>();
+
         while (true)
         {
             Console.Clear();
@@ -114,7 +115,6 @@ public class AdminProgram
             new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
 
             Console.SetCursorPosition(0, 7);
-
             string? input = Console.ReadLine();
 
             Console.Clear();
@@ -165,6 +165,7 @@ public class AdminProgram
 
             var categories = await serviceCategory.GetAllAsync();
             var rows = categories.Select(c => $"[{c.Id}] {c.Name}").ToList();
+            
             new Window("All categories", 0, 3, rows).Draw();
 
             Console.SetCursorPosition(0, 10);
@@ -176,16 +177,20 @@ public class AdminProgram
             if (ValidateInput.IsValidCategoryId(input, categories) && int.TryParse(input, out int id))
             {
                 Console.Clear();
+
                 var category = await serviceCategory.GetByIdAsync(id);
+                
                 if (category is null)
                     continue;
 
                 bool hasProducts = await serviceProduct.CategoryHasProductsAsync(category.Id);
+                
                 if (hasProducts)
                 {
                     Console.Clear();
                     List<string> messageRows = ["Can´t delete this category.", "It has products linked to it."];
                     new Window("Message", 0, 0, messageRows).Draw();
+                    
                     Message.PressAnyKeyToContinue();
                     continue;
                 }
@@ -198,6 +203,7 @@ public class AdminProgram
 
                     Console.SetCursorPosition(0, 6);
                     string? approved = Console.ReadLine();
+                    
                     if (approved?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true)
                     {
                         await serviceCategory.DeleteAsync(category);
@@ -224,7 +230,6 @@ public class AdminProgram
 
             Console.SetCursorPosition(0, 5);
             Console.Write("Category name: ");
-
             string? input = Console.ReadLine();
 
             if (input!.Equals("B", StringComparison.OrdinalIgnoreCase))
@@ -267,8 +272,9 @@ public class AdminProgram
 
                 case "4":
                     Console.Clear();
-                    await ListAllCustomersNames();
-                    Console.SetCursorPosition(0, 9);
+                    int rowCount = await ListAllCustomersNames();
+
+                    Console.SetCursorPosition(0, rowCount + 2);
                     Message.PressAnyKeyToContinue();
                     break;
 
@@ -292,8 +298,10 @@ public class AdminProgram
             new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
 
             var customers = await ListAllCustomersWithId();
+            
             Console.SetCursorPosition(0, 15);
             string? choice = Console.ReadLine();
+            
             if (choice is null)
             {
                 Message.PrintInvalidInput();
@@ -302,9 +310,11 @@ public class AdminProgram
 
             if (choice.Equals("B", StringComparison.OrdinalIgnoreCase))
                 return;
+            
             if (int.TryParse(choice, out int id))
             {
                 var customer = customers.FirstOrDefault(c => c.Id == id);
+                
                 if (customer is not null)
                 {
                     await ManageCustomer(customer);
@@ -324,11 +334,13 @@ public class AdminProgram
             using var scope = _provider!.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
             var customerWithAddress = await service.GetWithAddressesAsync(customer.Id);
+            
             Console.Clear();
             new Window("Manage customer", 0, 0, Menu.ReturnSimpleTextList("What would you like to change")).Draw();
             new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
 
             new Window("Customer", 0, 3, Menu.ReturnCustomerDetailsList(customerWithAddress!)).Draw();
+            
             Console.SetCursorPosition(0, 13);
             string? input = Console.ReadLine();
 
@@ -415,6 +427,7 @@ public class AdminProgram
             {
                 using var scope = _provider!.CreateScope();
                 var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+                
                 update(customer, input!);
                 await service.UpdateAsync(customer);
                 return;
@@ -431,6 +444,7 @@ public class AdminProgram
 
         var rows = customers.Select(p => $"[{p.Id}] {p.Name}").ToList();
         new Window("Customers", 0, 3, rows).Draw();
+        
         return customers;
     }
 
@@ -442,7 +456,8 @@ public class AdminProgram
 
         var rows = customers.Select(p => $"{p.Name}").ToList();
         new Window("All customers", 0, 0, rows).Draw();
-        return customers;
+        
+        return rows.Count();
     }
 
     private static async Task ListOrderHistoryForCustomer(Customer customer)
@@ -469,12 +484,17 @@ public class AdminProgram
                 rows.Add("");
             }
             new Window("Orders", 0, 5, rows).Draw();
+            
+            int topOffset = 7;
+            
+            Console.SetCursorPosition(0, rows.Count() + topOffset);
             Message.PressAnyKeyToContinue();
         }
         else
         {
             Console.Clear();
             new Window("Orders", 0, 0, Menu.ReturnSimpleTextList($"No orders found for {customer.Name}.")).Draw();
+            
             Console.SetCursorPosition(0, 3);
             Message.PressAnyKeyToContinue();
         }
@@ -492,6 +512,7 @@ public class AdminProgram
 
         using var scope = _provider!.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+        
         await service.AddAsync(new Customer
         {
             Name = name,
@@ -535,14 +556,15 @@ public class AdminProgram
             Console.Clear();
             new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("Who would you like to delete?")).Draw();
             new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
+            
             var customers = await ListAllCustomersWithId();
 
             Console.SetCursorPosition(0, 15);
-
             string? input = Console.ReadLine();
 
             if (input!.Equals("B", StringComparison.OrdinalIgnoreCase))
                 return;
+            
             if(!ValidateInput.IsValidCustomerId(input, customers) || !int.TryParse(input, out var customerId))
             {
                 Message.PrintInvalidInput();
@@ -559,6 +581,7 @@ public class AdminProgram
 
             using var scope = _provider!.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+            
             await service.DeleteAsync(customer);
             return;
         }
@@ -568,8 +591,10 @@ public class AdminProgram
         Console.Clear();
         List<string> rows = [message, "Press Y/y + enter for yes"];
         new Window("Confirm", 0, 0, rows).Draw();
+        
         Console.SetCursorPosition(0, 5);
         string? input = Console.ReadLine();
+        
         return input?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true;
     }
 
@@ -593,6 +618,7 @@ public class AdminProgram
 
             if (choice.Equals("B", StringComparison.OrdinalIgnoreCase))
                 return;
+            
             if (int.TryParse(choice, out int id))
             {
                 var product = products.FirstOrDefault(p => p.Id == id);
@@ -774,7 +800,6 @@ public class AdminProgram
 
             var products = await ListAllProducts();
             Console.WriteLine();
-
             string? input = Console.ReadLine();
 
             if (input!.Equals("B", StringComparison.OrdinalIgnoreCase))
@@ -795,6 +820,7 @@ public class AdminProgram
                 Console.WriteLine($"Are you sure you want to delete: {product!.Name}?");
                 Console.WriteLine("Press Y/y + enter");
                 string? sure = Console.ReadLine();
+                
                 if (sure?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true)
                 {
                     await service.DeleteAsync(product);
@@ -828,6 +854,7 @@ public class AdminProgram
                 var brands = await brandService.GetAllAsync();
                 return brands.Select(b => (b.Id, b.Name)).ToList();
             });
+        
         int categoryId = await GetValidIdFromUser(
             "Category",
             async () =>
@@ -1010,8 +1037,10 @@ public class AdminProgram
             {
                 int id = int.Parse(input!);
                 var product = productsWithDeals.FirstOrDefault(p => p.Id == id);
+                
                 product!.OnSale = false;
                 product.Price += 3;
+                
                 await service.UpdateAsync(product);
                 return;
             }
@@ -1069,6 +1098,7 @@ public class AdminProgram
     {
         Console.Clear();
         new Window("Choice", 0, 0, Menu.ReturnSimpleTextList(text)).Draw();
+        
         Console.SetCursorPosition(0, 3);
         Message.PressAnyKeyToContinue();
     }
