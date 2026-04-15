@@ -100,6 +100,8 @@ namespace ClothingWebstore
                 new Window("Navigation", 40, 0, Menu.ReturnGeneralNavigationList()).Draw();
                 new Window("Terms & Conditions", 0, 6, Menu.ReturnTermsList()).Draw();
 
+                Console.SetCursorPosition(0, 11);
+
                 ConsoleKeyInfo role = Console.ReadKey(true);
 
                 switch (role.Key)
