@@ -29,17 +29,18 @@ namespace EFCore.Repositories
 
         public async Task<List<Customer>> GetTopBuyingCustomersAsync(int count)
         {
-            var topCustomersIds = await context.Orders
-                .GroupBy(o => o.CustomerId)
-                .OrderByDescending(g => g.Count())
+            var topCustomerIds = await context.OrderProducts
+                .GroupBy(op => op.Order.CustomerId)
+                .OrderByDescending(g => g.Sum(op => op.Product.Price * op.ProductAmount))
                 .Select(g => g.Key)
                 .Take(count)
                 .ToListAsync();
 
-            return await context.Customers
-                .Where(c => topCustomersIds.Contains(c.Id))
-                .ToListAsync();
+            var customers = await context.Customers
+                    .Where(c => topCustomerIds.Contains(c.Id))
+                    .ToListAsync();
 
+            return customers.OrderBy(c => topCustomerIds.IndexOf(c.Id)).ToList();
         }
     }
 }
