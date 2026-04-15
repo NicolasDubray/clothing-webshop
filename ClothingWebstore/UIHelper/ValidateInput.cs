@@ -44,7 +44,7 @@ namespace ClothingWebstore.UIHelper
             int.TryParse(input, out int id) && products.Any(p => p.Id == id);
 
         internal static bool ProNameIsValid(string name) =>
-            name.Length > 2 && name.Length < 64
+            name.Length > 2 && name.Length < 24
             && !string.IsNullOrWhiteSpace(name);
 
         internal static bool ProPriceIsValid(string inputPrice) =>
