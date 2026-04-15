@@ -717,6 +717,8 @@ namespace ClothingWebstore
                 new Window("Register Account", 0, 0, registrationFormFieldRows).Draw();
 
                 var field = registrationFormFields[index];
+
+                Console.SetCursorPosition(0, 10);
                 string input = GetValidatedInput(field.FieldLabel, field.FieldInputValidation);
                 field.SetFieldValue(input);
                 ++index;
@@ -812,6 +814,8 @@ namespace ClothingWebstore
 
             while (true)
             {
+                Console.SetCursorPosition(0, 7);
+
                 Console.WriteLine();
                 Console.WriteLine($"Enter number (1-{shippingOptions.Count}) to select shipping method");
                 Console.WriteLine();
