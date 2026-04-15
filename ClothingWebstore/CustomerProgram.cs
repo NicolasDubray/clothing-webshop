@@ -963,21 +963,21 @@ namespace ClothingWebstore
             var service = scope.ServiceProvider.GetRequiredService<IProductService>();
             var productsWithDeals = await service.GetProductsWithDealsAsync();
 
+            int currentLeft = 0;
+            int spacing = 2;
+
             for (int i = 0; i < productsWithDeals.Count && i < 3; i++)
             {
                 var product = productsWithDeals[i];
                 List<string> productDetails = [$"{product.Name}", $"Price: {product.Price}$", "Now on sale!"];
 
-                new Window($"Offer {i + 1}", GetLeftPosition(i), 8, productDetails).Draw();
-            }
+                int maxLength = productDetails.Max(s => s.Length);
+                int boxWidth = maxLength + 4;
 
-            int GetLeftPosition(int i) => i switch
-            {
-                0 => 0,
-                1 => 35,
-                2 => 65,
-                _ => 0
-            };
+                new Window($"Offer {i + 1}", currentLeft, 8, productDetails).Draw();
+
+                currentLeft += boxWidth + spacing;
+            }
         }
     }
 }
