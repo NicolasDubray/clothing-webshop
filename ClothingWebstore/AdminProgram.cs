@@ -55,7 +55,7 @@ public class AdminProgram
                 default:
                     Message.PrintInvalidInput();
                     break;
-                
+
             }
         }
     }
@@ -173,11 +173,11 @@ public class AdminProgram
             if (input!.Equals("B", StringComparison.OrdinalIgnoreCase))
                 return;
 
-            if(ValidateInput.IsValidCategoryId(input, categories) && int.TryParse(input, out int id))
+            if (ValidateInput.IsValidCategoryId(input, categories) && int.TryParse(input, out int id))
             {
                 Console.Clear();
                 var category = await serviceCategory.GetByIdAsync(id);
-                if(category is null)
+                if (category is null)
                     continue;
 
                 bool hasProducts = await serviceProduct.CategoryHasProductsAsync(category.Id);
@@ -232,7 +232,7 @@ public class AdminProgram
 
             if (ValidateInput.IsValidName(input!))
             {
-                var category = new Category{ Name = input! };
+                var category = new Category { Name = input! };
                 await service.AddAsync(category);
                 return;
             }
@@ -622,7 +622,7 @@ public class AdminProgram
                 continue;
             }
 
-            
+
             if (input.Equals("B", StringComparison.OrdinalIgnoreCase))
                 return;
 
@@ -835,8 +835,8 @@ public class AdminProgram
                 var categories = await categoryService.GetAllAsync();
                 return categories.Select(c => (c.Id, c.Name)).ToList();
             });
-        
-        
+
+
 
 
         await service.AddAsync(new Product
@@ -902,8 +902,8 @@ public class AdminProgram
 
         new Window("Products", 0, 0, productList).Draw();
     }
-            
-              
+
+
     private static async Task SeeStatistics()
     {
         using var scope = _provider!.CreateScope();
@@ -930,7 +930,7 @@ public class AdminProgram
 
         var rows = topProducts.Select(p => $"{p.Name} - {p.Price}$ ({p.Brand.Name})").ToList();
         new Window("Best Selling Products", 30, 0, rows).Draw();
-        
+
     }
 
     private static async Task PrintTotalRevenue(IProductService service)
@@ -958,19 +958,45 @@ public class AdminProgram
 
     private static async Task ManageProductDeals()
     {
-        using var scope = _provider!.CreateScope();
-        var service = scope.ServiceProvider.GetRequiredService<IProductService>();
-            
-        if (await RemoveProductDeal(service))
+        while (true)
         {
-            await AddProductDeal(service);
+            using var scope = _provider!.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<IProductService>();
+            var productsWithDeals = await service.GetProductsWithDealsAsync();
+
+            Console.Clear();
+            new Window("Choice", 0, 0, Menu.ReturnProductDealManagingList()).Draw();
+            new Window("Navigation", 40, 0, Menu.ReturnInstructionList()).Draw();
+
+            var rows = productsWithDeals.Select(p => $"[{p.Id}] {p.Name} - Price: {p.Price}$").ToList();
+            new Window("Product deals right now", 0, 6, rows).Draw();
+
+            Console.SetCursorPosition(0, 13);
+            string? input = Console.ReadLine();
+
+            if (input!.Equals("B", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            if (input == "1")
+                await AddProductDeal(service);
+            else if (input == "2")
+                await RemoveProductDeal(service);
+            else
+                Message.PrintInvalidInput();
         }
     }
 
-    private static async Task<bool> RemoveProductDeal(IProductService service)
+    private static async Task RemoveProductDeal(IProductService service)
     {
         var productsWithDeals = await service.GetProductsWithDealsAsync();
-
+        if (productsWithDeals.Count <= 3)
+        {
+            Console.Clear();
+            new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("Can not remove deal. Try adding one first.")).Draw();
+            Console.SetCursorPosition(0, 3);
+            Message.PressAnyKeyToContinue();
+            return;
+        }
         while (true)
         {
             Console.Clear();
@@ -984,7 +1010,7 @@ public class AdminProgram
             string? input = Console.ReadLine();
 
             if (input!.Equals("B", StringComparison.OrdinalIgnoreCase))
-                return false;
+                return;
 
             if (ValidateInput.IsValidProductId(input!, productsWithDeals))
             {
@@ -993,7 +1019,7 @@ public class AdminProgram
                 product!.OnSale = false;
                 product.Price += 3;
                 await service.UpdateAsync(product);
-                return true;
+                return;
             }
             else
             {
@@ -1005,6 +1031,15 @@ public class AdminProgram
 
     private static async Task AddProductDeal(IProductService service)
     {
+        var productsWithDeals = await service.GetProductsWithDealsAsync();
+        if (productsWithDeals.Count >= 4)
+        {
+            Console.Clear();
+            new Window("Choice", 0, 0, Menu.ReturnSimpleTextList("Can not add deal. Try removing one first.")).Draw();
+            Console.SetCursorPosition(0, 3);
+            Message.PressAnyKeyToContinue();
+            return;
+        }
         var products = await service.GetAllAsync();
 
         var productsWithoutDeals = products
@@ -1029,8 +1064,8 @@ public class AdminProgram
 
                 product!.OnSale = true;
 
-                if(product.Price > 3)
-                    product.Price -= 3; 
+                if (product.Price > 3)
+                    product.Price -= 3;
 
                 await service.UpdateAsync(product);
                 return;

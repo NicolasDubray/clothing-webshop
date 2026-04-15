@@ -9,7 +9,10 @@ namespace ClothingWebstore.UIHelper
     {
         internal static List<string> ReturnGeneralStartMenuList()
         {
-            return ["Are you a customer / admin?", "[C] Customer", "[A] Admin"];
+            return [
+                "Are you a customer / admin?", 
+                "[C] Customer", 
+                "[A] Admin"];
         }
 
         internal static List<string> ReturnGeneralNavigationList()
@@ -19,7 +22,13 @@ namespace ClothingWebstore.UIHelper
 
         internal static List<string> ReturnAdminStartList()
         {
-            return ["What would you like to manage?", "[1] Products", "[2] Categories", "[3] Customer", "[4] Statistics", "[5] Product deals"];
+            return [
+                "What would you like to manage?", 
+                "[1] Products", 
+                "[2] Categories", 
+                "[3] Customer", 
+                "[4] Statistics", 
+                "[5] Product deals"];
         }
 
         public static List<string> ReturnTermsList()
@@ -33,7 +42,13 @@ namespace ClothingWebstore.UIHelper
 
         internal static List<string> ReturnCustomerMenuList()
         {
-            return ["Welcome to Stack over fits!", "", "What would you like to do?", "[1] View product page", "[2] View cart"];
+            return [
+                "Welcome to Stack over fits!", 
+                "", 
+                "What would you like to do?", 
+                "[1] View product page", 
+                "[2] View cart"
+                ];
         }
 
         internal static List<string> ReturnInstructionList()
@@ -43,7 +58,13 @@ namespace ClothingWebstore.UIHelper
 
         internal static List<string> ReturnManageCustomerList()
         {
-            return ["What would you like to do?", "[1] Manage an existing customer", "[2] Add new customer", "[3] Remove a customer", "[4] List all existing customers"];
+            return [
+                "What would you like to do?", 
+                "[1] Manage an existing customer", 
+                "[2] Add new customer", 
+                "[3] Remove a customer", 
+                "[4] List all existing customers"
+                ];
         }
 
         internal static List<string> ReturnManageCategoriesList()
@@ -53,6 +74,15 @@ namespace ClothingWebstore.UIHelper
                 "[1] Show all categories",
                 "[2] Add a category",
                 "[3] Remove a category"
+                ];
+        }
+
+        internal static List<string> ReturnProductDealManagingList()
+        {
+            return [
+                "What would you like to do?",
+                "[1] Add new product deal",
+                "[2] Remove product deal",
                 ];
         }
 
