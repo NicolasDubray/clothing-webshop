@@ -267,8 +267,8 @@ public class AdminProgram
 
                 case "4":
                     Console.Clear();
-                    await ListAllCustomersNames();
-                    Console.SetCursorPosition(0, 9);
+                    int rowCount = await ListAllCustomersNames();
+                    Console.SetCursorPosition(0, rowCount + 2);
                     Message.PressAnyKeyToContinue();
                     break;
 
@@ -434,7 +434,7 @@ public class AdminProgram
         return customers;
     }
 
-    private static async Task<List<Customer>> ListAllCustomersNames()
+    private static async Task<int> ListAllCustomersNames()
     {
         using var scope = _provider!.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
@@ -442,7 +442,7 @@ public class AdminProgram
 
         var rows = customers.Select(p => $"{p.Name}").ToList();
         new Window("All customers", 0, 0, rows).Draw();
-        return customers;
+        return rows.Count();
     }
 
     private static async Task ListOrderHistoryForCustomer(Customer customer)
@@ -469,6 +469,8 @@ public class AdminProgram
                 rows.Add("");
             }
             new Window("Orders", 0, 5, rows).Draw();
+            int topOffset = 7;
+            Console.SetCursorPosition(0, rows.Count() + topOffset);
             Message.PressAnyKeyToContinue();
         }
         else
