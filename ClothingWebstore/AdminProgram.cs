@@ -448,7 +448,7 @@ public class AdminProgram
         return customers;
     }
 
-    private static async Task<List<Customer>> ListAllCustomersNames()
+    private static async Task<int> ListAllCustomersNames()
     {
         using var scope = _provider!.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<ICustomerService>();
