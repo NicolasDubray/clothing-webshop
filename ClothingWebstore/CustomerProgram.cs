@@ -328,7 +328,7 @@ namespace ClothingWebstore
             if (data is null)
                 _cachedWeather = ["Weather is unavailable."];
             else
-                _cachedWeather = [$"Temperature: {Math.Round(data.Main.Temp)}°C", $"Wheater: {data.Weather[0].MainDescription}."];
+                _cachedWeather = [$"Temperature: {Math.Round(data.Main.Temp)}°C", $"Weather: {data.Weather[0].MainDescription}."];
             _lastFetch = DateTime.Now;
             return _cachedWeather;
         }
