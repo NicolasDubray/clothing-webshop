@@ -597,6 +597,7 @@ namespace ClothingWebstore
                         ShowCustomerAddress(_checkoutSession.Customer!);
 
                         Console.WriteLine();
+                        Console.SetCursorPosition(0, 6);
                         Message.PressAnyKeyToContinue();
 
                         return NavigationAction.Next;
@@ -922,6 +923,7 @@ namespace ClothingWebstore
 
             while (true)
             {
+                Console.SetCursorPosition(0, topOffset + 4);
                 Console.WriteLine();
                 Console.WriteLine($"Enter number (1-{paymentOptions.Count}) to select payment option");
                 Console.WriteLine();
